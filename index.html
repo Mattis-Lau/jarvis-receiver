@@ -158,15 +158,8 @@
       margin-top: 1vh;
     }
 
-    #jarvisMediaPlayer {
-      position: fixed;
-      left: 0;
-      top: 0;
-      width: 1px;
-      height: 1px;
-      opacity: 0.001;
-      pointer-events: none;
-      z-index: -1;
+    #jarvisAudio {
+      display: none;
     }
 
     #debug {
@@ -218,7 +211,7 @@
 </head>
 
 <body>
-  <cast-media-player id="jarvisMediaPlayer"></cast-media-player>
+  <audio id="jarvisAudio" preload="auto"></audio>
   <header class="top">
     <div class="brand">JARVIS</div>
     <div class="online"><span class="dot"></span>SYSTEM ONLINE</div>
@@ -236,7 +229,6 @@
   <script>
     const NAMESPACE = 'urn:x-cast:com.jarvis.receiver';
     const context = cast.framework.CastReceiverContext.getInstance();
-    const playerManager = context.getPlayerManager();
     const main = document.getElementById('main');
     const debug = document.getElementById('debug');
 
@@ -349,127 +341,150 @@
       `;
     }
 
+    const jarvisAudio = document.getElementById('jarvisAudio');
+
     let speechSenderId = null;
-    let speechStarted = false;
+    let speechChunks = [];
+    let speechExpectedChunks = 0;
+    let speechMime = 'audio/mpeg';
+    let speechObjectUrl = null;
 
-    async function speakOnReceiver(senderId, url) {
-      if (!url) {
-        try {
-          context.sendCustomMessage(
-            NAMESPACE,
-            senderId,
-            { type: 'SPEAK_ERROR', error: 'Keine Audio-URL erhalten.' }
-          );
-        } catch (_) {}
-        return;
-      }
-
-      speechSenderId = senderId;
-      speechStarted = false;
-      setDebug('TTS laden...');
+    function sendSpeechEvent(type, extra = {}) {
+      if (!speechSenderId) return;
 
       try {
-        const media =
-          new cast.framework.messages.MediaInformation();
-
-        media.contentId = url;
-        media.contentType = 'audio/mpeg';
-        media.streamType =
-          cast.framework.messages.StreamType.BUFFERED;
-
-        const request =
-          new cast.framework.messages.LoadRequestData();
-
-        request.media = media;
-        request.autoplay = true;
-
-        await playerManager.load(request);
-
-        setDebug('TTS geladen');
-
+        context.sendCustomMessage(
+          NAMESPACE,
+          speechSenderId,
+          Object.assign(
+            { type },
+            extra
+          )
+        );
       } catch (err) {
-        console.error('JARVIS TTS Load Error:', err);
-
-        try {
-          context.sendCustomMessage(
-            NAMESPACE,
-            senderId,
-            {
-              type: 'SPEAK_ERROR',
-              error: String(err)
-            }
-          );
-        } catch (_) {}
-
-        speechSenderId = null;
-        speechStarted = false;
+        console.warn(
+          'JARVIS Speech Event konnte nicht gesendet werden:',
+          err
+        );
       }
     }
 
-    playerManager.addEventListener(
-      cast.framework.events.EventType.PLAYING,
-      () => {
-        if (!speechSenderId || speechStarted) return;
+    function speechBegin(senderId, data) {
+      speechSenderId = senderId;
+      speechExpectedChunks = Number(data.chunks || 0);
+      speechMime = data.mime || 'audio/mpeg';
+      speechChunks = new Array(speechExpectedChunks);
 
-        speechStarted = true;
+      setDebug(
+        'TTS empfangen: 0/' + speechExpectedChunks
+      );
+    }
+
+    function speechChunk(data) {
+      const index = Number(data.index);
+
+      if (
+        Number.isInteger(index) &&
+        index >= 0 &&
+        index < speechChunks.length
+      ) {
+        speechChunks[index] = data.data || '';
+      }
+    }
+
+    async function speechEnd() {
+      try {
+        if (
+          !speechExpectedChunks ||
+          speechChunks.some(chunk => typeof chunk !== 'string')
+        ) {
+          throw new Error(
+            'TTS-Chunks unvollstaendig.'
+          );
+        }
+
+        const base64 = speechChunks.join('');
+        const binary = atob(base64);
+        const bytes = new Uint8Array(binary.length);
+
+        for (let i = 0; i < binary.length; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+
+        if (speechObjectUrl) {
+          URL.revokeObjectURL(speechObjectUrl);
+        }
+
+        const blob = new Blob(
+          [bytes],
+          { type: speechMime }
+        );
+
+        speechObjectUrl = URL.createObjectURL(blob);
+
+        jarvisAudio.src = speechObjectUrl;
+        jarvisAudio.currentTime = 0;
+
+        setDebug('TTS wird abgespielt');
+
+        await jarvisAudio.play();
+
+      } catch (err) {
+        console.error(
+          'JARVIS Audio Error:',
+          err
+        );
+
+        sendSpeechEvent(
+          'SPEAK_ERROR',
+          { error: String(err) }
+        );
+
+        speechSenderId = null;
+        speechChunks = [];
+        speechExpectedChunks = 0;
+      }
+    }
+
+    jarvisAudio.addEventListener(
+      'playing',
+      () => {
         setDebug('TTS spielt');
-
-        try {
-          context.sendCustomMessage(
-            NAMESPACE,
-            speechSenderId,
-            { type: 'SPEAK_STARTED' }
-          );
-        } catch (_) {}
+        sendSpeechEvent('SPEAK_STARTED');
       }
     );
 
-    playerManager.addEventListener(
-      cast.framework.events.EventType.ENDED,
+    jarvisAudio.addEventListener(
+      'ended',
       () => {
-        if (!speechSenderId || !speechStarted) return;
-
         setDebug('TTS beendet');
-
-        try {
-          context.sendCustomMessage(
-            NAMESPACE,
-            speechSenderId,
-            { type: 'SPEAK_DONE' }
-          );
-        } catch (_) {}
+        sendSpeechEvent('SPEAK_DONE');
 
         speechSenderId = null;
-        speechStarted = false;
+        speechChunks = [];
+        speechExpectedChunks = 0;
       }
     );
 
-    playerManager.addEventListener(
-      cast.framework.events.EventType.ERROR,
-      event => {
-        if (!speechSenderId) return;
+    jarvisAudio.addEventListener(
+      'error',
+      () => {
+        const code =
+          jarvisAudio.error?.code ??
+          'unbekannt';
 
-        console.error('JARVIS Player Error:', event);
-
-        try {
-          context.sendCustomMessage(
-            NAMESPACE,
-            speechSenderId,
-            {
-              type: 'SPEAK_ERROR',
-              error:
-                'PlayerError ' +
-                String(
-                  event?.detailedErrorCode ??
-                  event?.error ??
-                  'unbekannt'
-                )
-            }
-          );
-        } catch (_) {}
+        sendSpeechEvent(
+          'SPEAK_ERROR',
+          {
+            error:
+              'HTMLAudioElement Fehlercode ' +
+              String(code)
+          }
+        );
 
         speechSenderId = null;
-        speechStarted = false;
+        speechChunks = [];
+        speechExpectedChunks = 0;
       }
     );
 
@@ -510,11 +525,19 @@
           showStandby(data);
           break;
 
-        case 'SPEAK':
-          speakOnReceiver(
+        case 'SPEAK_BEGIN':
+          speechBegin(
             event.senderId,
-            data.url
+            data
           );
+          break;
+
+        case 'SPEAK_CHUNK':
+          speechChunk(data);
+          break;
+
+        case 'SPEAK_END':
+          speechEnd();
           break;
 
         default:
@@ -524,14 +547,16 @@
           });
       }
 
-      try {
-        context.sendCustomMessage(
-          NAMESPACE,
-          event.senderId,
-          { type: 'ACK', receivedType: data.type || null }
-        );
-      } catch (err) {
-        console.warn('ACK konnte nicht gesendet werden:', err);
+      if (data.type !== 'SPEAK_CHUNK') {
+        try {
+          context.sendCustomMessage(
+            NAMESPACE,
+            event.senderId,
+            { type: 'ACK', receivedType: data.type || null }
+          );
+        } catch (err) {
+          console.warn('ACK konnte nicht gesendet werden:', err);
+        }
       }
     }
 
