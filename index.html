@@ -26,18 +26,6 @@
       padding: 3.2vh 3.6vw 2.6vh;
     }
 
-    /* Verstecktes CAF-Medienelement:
-       Dadurch kann JARVIS Audio abspielen, ohne die eigene Oberfläche zu verlassen. */
-    .castMediaElement {
-      position: fixed;
-      width: 1px;
-      height: 1px;
-      opacity: 0;
-      pointer-events: none;
-      left: -20px;
-      top: -20px;
-    }
-
     .top {
       height: 10vh;
       display: flex;
@@ -76,6 +64,8 @@
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
+      max-width: none;
+      margin: 0;
     }
 
     .eyebrow {
@@ -137,12 +127,14 @@
       font-size: 1.05vw;
       letter-spacing: .18vw;
       margin-bottom: .8vh;
+      flex: 0 0 auto;
     }
 
     .card-title {
       font-size: 2vw;
       line-height: 1.08;
       margin-bottom: .9vh;
+      flex: 0 0 auto;
     }
 
     .desc {
@@ -175,6 +167,7 @@
       pointer-events: none;
     }
 
+    /* Rezeptansicht */
     .recipe-layout {
       flex: 1 1 auto;
       min-height: 0;
@@ -214,8 +207,6 @@
 </head>
 
 <body>
-  <video class="castMediaElement"></video>
-
   <header class="top">
     <div class="brand">JARVIS</div>
     <div class="online"><span class="dot"></span>SYSTEM ONLINE</div>
@@ -225,7 +216,7 @@
     <div class="eyebrow">ASSISTENT</div>
     <h1>Bereit.</h1>
     <div class="subtitle">Warte auf eine Anfrage.</div>
-    <div class="hint">Sag „Jarvis“</div>
+    <div class="hint">ONLINE</div>
   </main>
 
   <div id="debug">Receiver gestartet</div>
@@ -233,7 +224,6 @@
   <script>
     const NAMESPACE = 'urn:x-cast:com.jarvis.receiver';
     const context = cast.framework.CastReceiverContext.getInstance();
-const playerManager = context.getPlayerManager();
     const main = document.getElementById('main');
     const debug = document.getElementById('debug');
 
@@ -256,7 +246,7 @@ const playerManager = context.getPlayerManager();
         <div class="eyebrow">${esc(data.eyebrow || 'ASSISTENT')}</div>
         <h1>${esc(data.title || 'Bereit.')}</h1>
         <div class="subtitle">${esc(data.subtitle || 'Warte auf eine Anfrage.')}</div>
-        <div class="hint">${esc(data.hint || 'Sag „Jarvis“')}</div>
+        <div class="hint">${esc(data.hint || 'ONLINE')}</div>
       `;
     }
 
@@ -278,7 +268,7 @@ const playerManager = context.getPlayerManager();
           `).join('')}
         </div>
 
-        <div class="hint">${esc(data.hint || 'Sag „Jarvis“, warte auf „Ja“, und nenne dann die Nummer.')}</div>
+        <div class="hint">${esc(data.hint || 'Sag einfach die Nummer.')}</div>
       `;
     }
 
@@ -313,7 +303,7 @@ const playerManager = context.getPlayerManager();
             </section>
           </div>
 
-          <div class="hint">${esc(data.hint || 'Sag „Jarvis“, wenn du noch etwas wissen möchtest.')}</div>
+          <div class="hint">${esc(data.hint || 'Sag „nächster Schritt“ zum Fortfahren.')}</div>
         `;
       } else {
         main.innerHTML = `
@@ -321,6 +311,7 @@ const playerManager = context.getPlayerManager();
           <h1>${esc(data.title || 'Rezept')}</h1>
           <div class="subtitle">${esc(data.subtitle || '')}</div>
           <div class="text">${esc(data.text || data.content || '')}</div>
+          <div class="hint">${esc(data.hint || 'Sag „nächster Schritt“ zum Fortfahren.')}</div>
         `;
       }
     }
@@ -332,7 +323,7 @@ const playerManager = context.getPlayerManager();
         <div class="step">
           <div class="text">${esc(data.text || data.content || '')}</div>
         </div>
-        <div class="hint">${esc(data.hint || 'Sag „Jarvis“ für den nächsten Befehl.')}</div>
+        <div class="hint">${esc(data.hint || 'Sag „weiter“, wenn du bereit bist.')}</div>
       `;
     }
 
@@ -340,95 +331,10 @@ const playerManager = context.getPlayerManager();
       main.innerHTML = `
         <div class="eyebrow">${esc(data.eyebrow || 'INFORMATION')}</div>
         <h1>${esc(data.title || 'JARVIS')}</h1>
-        <div class="subtitle">${esc(data.subtitle || '')}</div>
         <div class="text">${esc(data.text || data.content || '')}</div>
         <div class="hint">${esc(data.hint || '')}</div>
       `;
     }
-
-    let speechSenderId = null;
-    let speechActive = false;
-
-    async function speakOnReceiver(senderId, url) {
-      if (!url) {
-        try {
-          context.sendCustomMessage(
-            NAMESPACE,
-            senderId,
-            { type: 'SPEAK_ERROR', error: 'Keine Audio-URL erhalten.' }
-          );
-        } catch (_) {}
-        return;
-      }
-
-      speechSenderId = senderId;
-      speechActive = false;
-
-      try {
-        await playerManager.load({
-          autoplay: true,
-          media: {
-            contentId: url,
-            contentType: 'audio/mpeg',
-            streamType: 'BUFFERED',
-            metadata: {
-              metadataType: 0,
-              title: 'JARVIS'
-            }
-          }
-        });
-      } catch (err) {
-        console.error('JARVIS TTS load error:', err);
-
-        try {
-          context.sendCustomMessage(
-            NAMESPACE,
-            senderId,
-            { type: 'SPEAK_ERROR', error: String(err) }
-          );
-        } catch (_) {}
-      }
-    }
-
-    playerManager.addEventListener(
-      cast.framework.events.EventType.PLAYER_STATE_CHANGED,
-      event => {
-        const state = event.playerState;
-
-        if (
-          speechSenderId &&
-          state === cast.framework.messages.PlayerState.PLAYING &&
-          !speechActive
-        ) {
-          speechActive = true;
-
-          try {
-            context.sendCustomMessage(
-              NAMESPACE,
-              speechSenderId,
-              { type: 'SPEAK_STARTED' }
-            );
-          } catch (_) {}
-        }
-
-        if (
-          speechSenderId &&
-          speechActive &&
-          state === cast.framework.messages.PlayerState.IDLE
-        ) {
-          try {
-            context.sendCustomMessage(
-              NAMESPACE,
-              speechSenderId,
-              { type: 'SPEAK_DONE' }
-            );
-          } catch (_) {}
-
-          speechSenderId = null;
-          speechActive = false;
-        }
-      }
-    );
 
     function handleMessage(event) {
       let data = event.data;
@@ -468,11 +374,19 @@ const playerManager = context.getPlayerManager();
           break;
 
         case 'SPEAK':
-          speakOnReceiver(event.senderId, data.url);
+          if (data.text) {
+            showInfo({
+              title: data.title || 'JARVIS',
+              text: data.text
+            });
+          }
           break;
 
         default:
-          console.warn('Unbekannte JARVIS-Nachricht:', data);
+          showInfo({
+            title: 'Nachricht empfangen',
+            text: JSON.stringify(data, null, 2)
+          });
       }
 
       try {
