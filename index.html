@@ -158,6 +158,17 @@
       margin-top: 1vh;
     }
 
+    #jarvisMediaPlayer {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 1px;
+      height: 1px;
+      opacity: 0.001;
+      pointer-events: none;
+      z-index: -1;
+    }
+
     #debug {
       position: fixed;
       right: 1.2vw;
@@ -207,6 +218,7 @@
 </head>
 
 <body>
+  <cast-media-player id="jarvisMediaPlayer"></cast-media-player>
   <header class="top">
     <div class="brand">JARVIS</div>
     <div class="online"><span class="dot"></span>SYSTEM ONLINE</div>
@@ -224,6 +236,7 @@
   <script>
     const NAMESPACE = 'urn:x-cast:com.jarvis.receiver';
     const context = cast.framework.CastReceiverContext.getInstance();
+    const playerManager = context.getPlayerManager();
     const main = document.getElementById('main');
     const debug = document.getElementById('debug');
 
@@ -336,6 +349,130 @@
       `;
     }
 
+    let speechSenderId = null;
+    let speechStarted = false;
+
+    async function speakOnReceiver(senderId, url) {
+      if (!url) {
+        try {
+          context.sendCustomMessage(
+            NAMESPACE,
+            senderId,
+            { type: 'SPEAK_ERROR', error: 'Keine Audio-URL erhalten.' }
+          );
+        } catch (_) {}
+        return;
+      }
+
+      speechSenderId = senderId;
+      speechStarted = false;
+      setDebug('TTS laden...');
+
+      try {
+        const media =
+          new cast.framework.messages.MediaInformation();
+
+        media.contentId = url;
+        media.contentType = 'audio/mpeg';
+        media.streamType =
+          cast.framework.messages.StreamType.BUFFERED;
+
+        const request =
+          new cast.framework.messages.LoadRequestData();
+
+        request.media = media;
+        request.autoplay = true;
+
+        await playerManager.load(request);
+
+        setDebug('TTS geladen');
+
+      } catch (err) {
+        console.error('JARVIS TTS Load Error:', err);
+
+        try {
+          context.sendCustomMessage(
+            NAMESPACE,
+            senderId,
+            {
+              type: 'SPEAK_ERROR',
+              error: String(err)
+            }
+          );
+        } catch (_) {}
+
+        speechSenderId = null;
+        speechStarted = false;
+      }
+    }
+
+    playerManager.addEventListener(
+      cast.framework.events.EventType.PLAYING,
+      () => {
+        if (!speechSenderId || speechStarted) return;
+
+        speechStarted = true;
+        setDebug('TTS spielt');
+
+        try {
+          context.sendCustomMessage(
+            NAMESPACE,
+            speechSenderId,
+            { type: 'SPEAK_STARTED' }
+          );
+        } catch (_) {}
+      }
+    );
+
+    playerManager.addEventListener(
+      cast.framework.events.EventType.ENDED,
+      () => {
+        if (!speechSenderId || !speechStarted) return;
+
+        setDebug('TTS beendet');
+
+        try {
+          context.sendCustomMessage(
+            NAMESPACE,
+            speechSenderId,
+            { type: 'SPEAK_DONE' }
+          );
+        } catch (_) {}
+
+        speechSenderId = null;
+        speechStarted = false;
+      }
+    );
+
+    playerManager.addEventListener(
+      cast.framework.events.EventType.ERROR,
+      event => {
+        if (!speechSenderId) return;
+
+        console.error('JARVIS Player Error:', event);
+
+        try {
+          context.sendCustomMessage(
+            NAMESPACE,
+            speechSenderId,
+            {
+              type: 'SPEAK_ERROR',
+              error:
+                'PlayerError ' +
+                String(
+                  event?.detailedErrorCode ??
+                  event?.error ??
+                  'unbekannt'
+                )
+            }
+          );
+        } catch (_) {}
+
+        speechSenderId = null;
+        speechStarted = false;
+      }
+    );
+
     function handleMessage(event) {
       let data = event.data;
 
@@ -374,12 +511,10 @@
           break;
 
         case 'SPEAK':
-          if (data.text) {
-            showInfo({
-              title: data.title || 'JARVIS',
-              text: data.text
-            });
-          }
+          speakOnReceiver(
+            event.senderId,
+            data.url
+          );
           break;
 
         default:
