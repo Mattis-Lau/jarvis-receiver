@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>JARVIS Receiver</title>
+
+  <script src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 45%, rgba(38,142,190,.13), transparent 34%),
+        linear-gradient(180deg, #06101a 0%, #02070c 100%);
+      color: #eaf8ff;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      padding: 3.2vh 3.6vw 2.6vh;
+    }
+
+    .top {
+      height: 10vh;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(111,211,255,.28);
+    }
+
+    .brand {
+      font-size: 2.2vw;
+      letter-spacing: .65vw;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .online {
+      font-size: 1.05vw;
+      letter-spacing: .16vw;
+      color: #86dcff;
+      white-space: nowrap;
+    }
+
+    .dot {
+      display: inline-block;
+      width: .6vw;
+      height: .6vw;
+      border-radius: 50%;
+      background: #86dcff;
+      margin-right: .65vw;
+      box-shadow: 0 0 16px #86dcff;
+    }
+
+    main {
+      height: 82vh;
+      padding-top: 3.5vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      max-width: none;
+      margin: 0;
+    }
+
+    .eyebrow {
+      color: #78d4ff;
+      font-size: 1vw;
+      letter-spacing: .25vw;
+      text-transform: uppercase;
+      margin-bottom: 1.2vh;
+      flex: 0 0 auto;
+    }
+
+    h1 {
+      font-size: 3.3vw;
+      line-height: 1.08;
+      margin: 0 0 1.1vh;
+      font-weight: 500;
+      flex: 0 0 auto;
+    }
+
+    .subtitle {
+      font-size: 1.55vw;
+      line-height: 1.25;
+      color: #aac4d1;
+      margin-bottom: 2.5vh;
+      flex: 0 0 auto;
+    }
+
+    .hint {
+      margin-top: 1.7vh;
+      font-size: 1.05vw;
+      color: #78d4ff;
+      flex: 0 0 auto;
+    }
+
+    .grid {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 2vh 1.7vw;
+      margin-top: .5vh;
+    }
+
+    .card {
+      min-height: 0;
+      overflow: hidden;
+      border: 1px solid rgba(111,211,255,.34);
+      background: rgba(11,35,50,.62);
+      border-radius: 1.2vw;
+      padding: 2.2vh 2vw;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .num {
+      color: #72d5ff;
+      font-size: 1.05vw;
+      letter-spacing: .18vw;
+      margin-bottom: .8vh;
+      flex: 0 0 auto;
+    }
+
+    .card-title {
+      font-size: 2vw;
+      line-height: 1.08;
+      margin-bottom: .9vh;
+      flex: 0 0 auto;
+    }
+
+    .desc {
+      font-size: 1.18vw;
+      line-height: 1.28;
+      color: #a9c0cb;
+      overflow: hidden;
+    }
+
+    .text {
+      font-size: 1.4vw;
+      line-height: 1.45;
+      color: #c8dce6;
+      white-space: pre-wrap;
+      overflow: hidden;
+    }
+
+    .step {
+      border-left: 3px solid #75d8ff;
+      padding-left: 1.6vw;
+      margin-top: 1vh;
+    }
+
+    #debug {
+      position: fixed;
+      right: 1.2vw;
+      bottom: .8vh;
+      font-size: .7vw;
+      color: rgba(135,220,255,.42);
+      pointer-events: none;
+    }
+
+    /* Rezeptansicht */
+    .recipe-layout {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: .85fr 1.35fr;
+      gap: 2vw;
+    }
+
+    .recipe-panel {
+      min-height: 0;
+      overflow: hidden;
+      border: 1px solid rgba(111,211,255,.30);
+      background: rgba(11,35,50,.52);
+      border-radius: 1.1vw;
+      padding: 2.2vh 1.8vw;
+    }
+
+    .recipe-panel h2 {
+      margin: 0 0 1.4vh;
+      color: #78d4ff;
+      font-size: 1.5vw;
+      font-weight: 500;
+    }
+
+    .recipe-panel ul,
+    .recipe-panel ol {
+      margin: 0;
+      padding-left: 1.5vw;
+      font-size: 1.18vw;
+      line-height: 1.42;
+    }
+
+    .recipe-panel li {
+      margin-bottom: .7vh;
+    }
+  </style>
+</head>
+
+<body>
+  <header class="top">
+    <div class="brand">JARVIS</div>
+    <div class="online"><span class="dot"></span>SYSTEM ONLINE</div>
+  </header>
+
+  <main id="main">
+    <div class="eyebrow">ASSISTENT</div>
+    <h1>Bereit.</h1>
+    <div class="subtitle">Warte auf eine Anfrage.</div>
+    <div class="hint">ONLINE</div>
+  </main>
+
+  <div id="debug">Receiver gestartet</div>
+
+  <script>
+    const NAMESPACE = 'urn:x-cast:com.jarvis.receiver';
+    const context = cast.framework.CastReceiverContext.getInstance();
+    const main = document.getElementById('main');
+    const debug = document.getElementById('debug');
+
+    function esc(value) {
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function setDebug(text) {
+      debug.textContent = text;
+      console.log('[JARVIS]', text);
+    }
+
+    function showStandby(data = {}) {
+      main.innerHTML = `
+        <div class="eyebrow">${esc(data.eyebrow || 'ASSISTENT')}</div>
+        <h1>${esc(data.title || 'Bereit.')}</h1>
+        <div class="subtitle">${esc(data.subtitle || 'Warte auf eine Anfrage.')}</div>
+        <div class="hint">${esc(data.hint || 'ONLINE')}</div>
+      `;
+    }
+
+    function showIdeas(data) {
+      const items = Array.isArray(data.items) ? data.items.slice(0, 4) : [];
+
+      main.innerHTML = `
+        <div class="eyebrow">REZEPTIDEEN</div>
+        <h1>${esc(data.title || 'Was möchtest du kochen?')}</h1>
+        <div class="subtitle">${esc(data.subtitle || '')}</div>
+
+        <div class="grid">
+          ${items.map((item, i) => `
+            <div class="card">
+              <div class="num">0${i + 1}</div>
+              <div class="card-title">${esc(item.title || item.titel || '')}</div>
+              <div class="desc">${esc(item.description || item.beschreibung || '')}</div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="hint">${esc(data.hint || 'Sag einfach die Nummer.')}</div>
+      `;
+    }
+
+    function showRecipe(data) {
+      const ingredients = Array.isArray(data.ingredients)
+        ? data.ingredients
+        : (Array.isArray(data.zutaten) ? data.zutaten : []);
+
+      const steps = Array.isArray(data.steps)
+        ? data.steps
+        : (Array.isArray(data.schritte) ? data.schritte : []);
+
+      if (ingredients.length || steps.length) {
+        main.innerHTML = `
+          <div class="eyebrow">REZEPT</div>
+          <h1>${esc(data.title || data.titel || 'Rezept')}</h1>
+          <div class="subtitle">${esc(data.subtitle || '')}</div>
+
+          <div class="recipe-layout">
+            <section class="recipe-panel">
+              <h2>Zutaten</h2>
+              <ul>
+                ${ingredients.map(x => `<li>${esc(x)}</li>`).join('')}
+              </ul>
+            </section>
+
+            <section class="recipe-panel">
+              <h2>Zubereitung</h2>
+              <ol>
+                ${steps.map(x => `<li>${esc(x)}</li>`).join('')}
+              </ol>
+            </section>
+          </div>
+
+          <div class="hint">${esc(data.hint || 'Sag „nächster Schritt“ zum Fortfahren.')}</div>
+        `;
+      } else {
+        main.innerHTML = `
+          <div class="eyebrow">REZEPT</div>
+          <h1>${esc(data.title || 'Rezept')}</h1>
+          <div class="subtitle">${esc(data.subtitle || '')}</div>
+          <div class="text">${esc(data.text || data.content || '')}</div>
+          <div class="hint">${esc(data.hint || 'Sag „nächster Schritt“ zum Fortfahren.')}</div>
+        `;
+      }
+    }
+
+    function showStep(data) {
+      main.innerHTML = `
+        <div class="eyebrow">SCHRITT ${esc(data.step || '')}</div>
+        <h1>${esc(data.title || 'Zubereitung')}</h1>
+        <div class="step">
+          <div class="text">${esc(data.text || data.content || '')}</div>
+        </div>
+        <div class="hint">${esc(data.hint || 'Sag „weiter“, wenn du bereit bist.')}</div>
+      `;
+    }
+
+    function showInfo(data) {
+      main.innerHTML = `
+        <div class="eyebrow">${esc(data.eyebrow || 'INFORMATION')}</div>
+        <h1>${esc(data.title || 'JARVIS')}</h1>
+        <div class="text">${esc(data.text || data.content || '')}</div>
+        <div class="hint">${esc(data.hint || '')}</div>
+      `;
+    }
+
+    function handleMessage(event) {
+      let data = event.data;
+
+      if (typeof data === 'string') {
+        try {
+          data = JSON.parse(data);
+        } catch (_) {
+          data = { type: 'SHOW_INFO', text: data };
+        }
+      }
+
+      if (!data || typeof data !== 'object') return;
+
+      setDebug('Empfangen: ' + (data.type || 'unbekannt'));
+
+      switch (data.type) {
+        case 'SHOW_IDEAS':
+          showIdeas(data);
+          break;
+
+        case 'SHOW_RECIPE':
+          showRecipe(data);
+          break;
+
+        case 'SHOW_STEP':
+          showStep(data);
+          break;
+
+        case 'SHOW_INFO':
+          showInfo(data);
+          break;
+
+        case 'STANDBY':
+        case 'SHOW_STANDBY':
+          showStandby(data);
+          break;
+
+        case 'SPEAK':
+          if (data.text) {
+            showInfo({
+              title: data.title || 'JARVIS',
+              text: data.text
+            });
+          }
+          break;
+
+        default:
+          showInfo({
+            title: 'Nachricht empfangen',
+            text: JSON.stringify(data, null, 2)
+          });
+      }
+
+      try {
+        context.sendCustomMessage(
+          NAMESPACE,
+          event.senderId,
+          { type: 'ACK', receivedType: data.type || null }
+        );
+      } catch (err) {
+        console.warn('ACK konnte nicht gesendet werden:', err);
+      }
+    }
+
+    context.addCustomMessageListener(NAMESPACE, handleMessage);
+
+    const options = new cast.framework.CastReceiverOptions();
+    options.disableIdleTimeout = true;
+    options.statusText = 'JARVIS bereit';
+    options.customNamespaces = {};
+    options.customNamespaces[NAMESPACE] =
+      cast.framework.system.MessageType.JSON;
+
+    context.start(options);
+    setDebug('JARVIS Receiver bereit');
+  </script>
+</body>
+</html>
