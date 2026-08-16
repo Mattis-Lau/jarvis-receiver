@@ -16,8 +16,11 @@
       margin: 0;
       overflow: hidden;
       background:
-        radial-gradient(circle at 50% 45%, rgba(38,142,190,.13), transparent 34%),
-        linear-gradient(180deg, #06101a 0%, #02070c 100%);
+        linear-gradient(rgba(70, 183, 231, .025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(70, 183, 231, .025) 1px, transparent 1px),
+        radial-gradient(circle at 50% 38%, rgba(36, 150, 205, .15), transparent 38%),
+        linear-gradient(180deg, #06111b 0%, #02070c 100%);
+      background-size: 4.5vw 4.5vw, 4.5vw 4.5vw, auto, auto;
       color: #eaf8ff;
       font-family: Arial, Helvetica, sans-serif;
     }
@@ -106,42 +109,130 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       grid-template-rows: 1fr 1fr;
-      gap: 2vh 1.7vw;
-      margin-top: .5vh;
+      gap: 2.2vh 1.55vw;
+      margin-top: .4vh;
     }
 
     .card {
+      position: relative;
       min-height: 0;
       overflow: hidden;
-      border: 1px solid rgba(111,211,255,.34);
-      background: rgba(11,35,50,.62);
-      border-radius: 1.2vw;
-      padding: 2.2vh 2vw;
+      border: 1px solid rgba(85, 209, 255, .42);
+      background:
+        linear-gradient(135deg, rgba(15, 46, 67, .88), rgba(5, 18, 30, .76));
+      border-radius: 1.05vw;
+      padding: 1.7vh 1.55vw 1.45vh;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,.025),
+        0 0 2.1vw rgba(26, 167, 224, .07);
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      justify-content: flex-start;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: .22vw;
+      height: 100%;
+      background: linear-gradient(
+        180deg,
+        rgba(93, 222, 255, .95),
+        rgba(66, 132, 255, .28)
+      );
+      box-shadow: 0 0 1vw rgba(73, 211, 255, .48);
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      right: -4vw;
+      top: -7vh;
+      width: 13vw;
+      height: 13vw;
+      border: 1px solid rgba(94, 216, 255, .10);
+      border-radius: 50%;
+      box-shadow:
+        0 0 0 1.4vw rgba(75, 176, 227, .025),
+        0 0 0 3vw rgba(75, 176, 227, .018);
+      pointer-events: none;
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: .7vh;
+      position: relative;
+      z-index: 1;
     }
 
     .num {
-      color: #72d5ff;
-      font-size: 1.05vw;
-      letter-spacing: .18vw;
-      margin-bottom: .8vh;
-      flex: 0 0 auto;
+      color: #82e3ff;
+      font-size: .88vw;
+      letter-spacing: .22vw;
+      font-weight: 700;
+    }
+
+    .card-meta {
+      display: flex;
+      gap: .45vw;
+      align-items: center;
+    }
+
+    .chip {
+      border: 1px solid rgba(102, 212, 255, .28);
+      background: rgba(70, 182, 232, .08);
+      color: #9edfff;
+      border-radius: 999px;
+      padding: .36vh .55vw;
+      font-size: .68vw;
+      letter-spacing: .045vw;
+      white-space: nowrap;
     }
 
     .card-title {
-      font-size: 2vw;
-      line-height: 1.08;
-      margin-bottom: .9vh;
-      flex: 0 0 auto;
+      position: relative;
+      z-index: 1;
+      font-size: 1.72vw;
+      line-height: 1.04;
+      font-weight: 600;
+      margin: .15vh 0 .7vh;
+      color: #f4fbff;
+      max-width: 86%;
     }
 
     .desc {
-      font-size: 1.18vw;
+      position: relative;
+      z-index: 1;
+      font-size: .95vw;
       line-height: 1.28;
-      color: #a9c0cb;
+      color: #a9c7d6;
+      max-width: 94%;
+      min-height: 2.4em;
       overflow: hidden;
+    }
+
+    .ingredients {
+      position: relative;
+      z-index: 1;
+      margin-top: auto;
+      padding-top: .75vh;
+      display: flex;
+      gap: .42vw;
+      flex-wrap: wrap;
+      border-top: 1px solid rgba(107, 207, 247, .11);
+    }
+
+    .ingredient {
+      color: #d7f4ff;
+      background: rgba(113, 211, 255, .055);
+      border-radius: .36vw;
+      padding: .34vh .45vw;
+      font-size: .72vw;
+      white-space: nowrap;
     }
 
     .text {
@@ -259,18 +350,37 @@
       const items = Array.isArray(data.items) ? data.items.slice(0, 4) : [];
 
       main.innerHTML = `
-        <div class="eyebrow">REZEPTIDEEN</div>
+        <div class="eyebrow">CULINARY // OPTIONS</div>
         <h1>${esc(data.title || 'Was möchtest du kochen?')}</h1>
         <div class="subtitle">${esc(data.subtitle || '')}</div>
 
         <div class="grid">
-          ${items.map((item, i) => `
-            <div class="card">
-              <div class="num">0${i + 1}</div>
-              <div class="card-title">${esc(item.title || item.titel || '')}</div>
-              <div class="desc">${esc(item.description || item.beschreibung || '')}</div>
-            </div>
-          `).join('')}
+          ${items.map((item, i) => {
+            const ingredients = Array.isArray(item.ingredients)
+              ? item.ingredients.slice(0, 3)
+              : [];
+
+            return `
+              <div class="card">
+                <div class="card-head">
+                  <div class="num">OPTION 0${i + 1}</div>
+                  <div class="card-meta">
+                    ${item.duration ? `<span class="chip">${esc(item.duration)}</span>` : ''}
+                    ${item.difficulty ? `<span class="chip">${esc(item.difficulty)}</span>` : ''}
+                  </div>
+                </div>
+
+                <div class="card-title">${esc(item.title || item.titel || '')}</div>
+                <div class="desc">${esc(item.description || item.beschreibung || '')}</div>
+
+                ${ingredients.length ? `
+                  <div class="ingredients">
+                    ${ingredients.map(x => `<span class="ingredient">${esc(x)}</span>`).join('')}
+                  </div>
+                ` : ''}
+              </div>
+            `;
+          }).join('')}
         </div>
 
         <div class="hint">${esc(data.hint || 'Sag einfach die Nummer.')}</div>
