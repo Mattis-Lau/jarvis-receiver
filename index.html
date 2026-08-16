@@ -3,61 +3,454 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>JARVIS Receiver Minimal</title>
+  <title>JARVIS Receiver</title>
 
   <script src="//www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
 
   <style>
+    :root {
+      --bg: #07101a;
+      --panel: rgba(15, 31, 48, 0.94);
+      --panel2: rgba(19, 43, 66, 0.90);
+      --text: #eef7ff;
+      --muted: #9db0c1;
+      --accent: #63c7ff;
+      --accent2: #a4e4ff;
+      --line: rgba(99, 199, 255, 0.28);
+    }
+
+    * { box-sizing: border-box; }
+
     html, body {
       width: 100%;
       height: 100%;
       margin: 0;
-      background: #07101a;
-      color: #eaf7ff;
-      font-family: Arial, sans-serif;
       overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 38%, rgba(30, 91, 126, 0.24), transparent 36%),
+        linear-gradient(145deg, #04090f 0%, var(--bg) 55%, #091622 100%);
+      color: var(--text);
+      font-family: "Segoe UI", Arial, sans-serif;
     }
 
-    body {
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(99,199,255,.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99,199,255,.025) 1px, transparent 1px);
+      background-size: 48px 48px;
+    }
+
+    #app {
+      height: 100%;
+      padding: 54px 72px 44px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .orb {
+      width: 58px;
+      height: 58px;
+      border: 2px solid var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 22px rgba(99,199,255,.55), inset 0 0 18px rgba(99,199,255,.24);
+      position: relative;
+    }
+
+    .orb::before, .orb::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(164,228,255,.62);
+    }
+
+    .orb::before { inset: 8px; }
+    .orb::after { inset: 17px; background: rgba(99,199,255,.18); }
+
+    .brand {
+      font-size: 42px;
+      letter-spacing: 8px;
+      font-weight: 600;
+    }
+
+    .status {
+      margin-left: auto;
+      color: var(--muted);
+      font-size: 20px;
+    }
+
+    .status::before {
+      content: "";
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      margin-right: 12px;
+      border-radius: 50%;
+      background: #6df5be;
+      box-shadow: 0 0 14px rgba(109,245,190,.85);
+    }
+
+    .rule {
+      margin-top: 30px;
+      height: 1px;
+      background: linear-gradient(90deg, var(--accent), var(--line), transparent);
+    }
+
+    main {
+      flex: 1;
+      min-height: 0;
+      padding-top: 38px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    #eyebrow {
+      color: var(--accent2);
+      text-transform: uppercase;
+      letter-spacing: 4px;
+      font-size: 18px;
+    }
+
+    #title {
+      margin: 12px 0 0;
+      font-size: 58px;
+      line-height: 1.08;
+    }
+
+    #subtitle {
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 27px;
+    }
+
+    #content {
+      margin-top: 32px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .standby {
+      height: 100%;
       display: grid;
       place-items: center;
     }
 
-    .box {
-      text-align: center;
-      border: 2px solid #63c7ff;
-      border-radius: 24px;
-      padding: 64px 88px;
-      box-shadow: 0 0 40px rgba(99,199,255,.25);
+    .core {
+      width: 230px;
+      height: 230px;
+      border-radius: 50%;
+      border: 2px solid rgba(99,199,255,.75);
+      display: grid;
+      place-items: center;
+      box-shadow: 0 0 60px rgba(99,199,255,.15), inset 0 0 60px rgba(99,199,255,.08);
+      color: var(--accent2);
+      font-size: 28px;
+      letter-spacing: 3px;
     }
 
-    h1 {
-      margin: 0 0 20px;
-      font-size: 64px;
-      letter-spacing: 8px;
+    .info {
+      font-size: 34px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      max-width: 1500px;
     }
 
-    p {
+    .ideas {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 26px;
+    }
+
+    .idea {
+      min-height: 185px;
+      background: linear-gradient(145deg, var(--panel), var(--panel2));
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 28px 32px;
+      display: grid;
+      grid-template-columns: 66px 1fr;
+      gap: 18px;
+    }
+
+    .idea-number {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      border: 1px solid var(--accent);
+      display: grid;
+      place-items: center;
+      color: var(--accent2);
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .idea h3 {
+      margin: 2px 0 10px;
+      font-size: 34px;
+    }
+
+    .idea p {
       margin: 0;
-      font-size: 30px;
-      color: #a4e4ff;
+      color: var(--muted);
+      font-size: 24px;
+      line-height: 1.35;
+    }
+
+    .recipe {
+      height: 100%;
+      display: grid;
+      grid-template-columns: .85fr 1.4fr;
+      gap: 42px;
+    }
+
+    .panel {
+      background: linear-gradient(145deg, var(--panel), rgba(12,29,45,.90));
+      border: 1px solid var(--line);
+      border-radius: 22px;
+      padding: 30px 34px;
+      overflow: hidden;
+    }
+
+    .panel h3 {
+      margin: 0 0 20px;
+      color: var(--accent2);
+      font-size: 31px;
+    }
+
+    .panel ul, .panel ol {
+      margin: 0;
+      padding-left: 28px;
+      font-size: 25px;
+      line-height: 1.46;
+    }
+
+    .panel li { margin-bottom: 9px; }
+
+    .step-wrap {
+      height: 100%;
+      display: grid;
+      place-items: center;
+    }
+
+    .step-card {
+      width: min(1450px, 92%);
+      background: linear-gradient(145deg, var(--panel), var(--panel2));
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      padding: 56px 66px;
+    }
+
+    .step-count {
+      color: var(--accent2);
+      font-size: 22px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    .step-text {
+      margin-top: 28px;
+      font-size: 48px;
+      line-height: 1.34;
+    }
+
+    footer {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 19px;
+    }
+
+    #hint { color: var(--accent2); }
+
+    #jarvisAudio {
+      width: 0;
+      height: 0;
+      opacity: 0;
+      position: absolute;
     }
   </style>
 </head>
 <body>
-  <div class="box">
-    <h1>JARVIS</h1>
-    <p>RECEIVER ONLINE</p>
+  <audio id="jarvisAudio"></audio>
+
+  <div id="app">
+    <header>
+      <div class="orb"></div>
+      <div class="brand">JARVIS</div>
+      <div class="status">SYSTEM ONLINE</div>
+    </header>
+
+    <div class="rule"></div>
+
+    <main>
+      <div id="eyebrow">ASSISTENT</div>
+      <h1 id="title">Bereit.</h1>
+      <div id="subtitle">Warte auf eine Anfrage.</div>
+      <div id="content"></div>
+    </main>
+
+    <footer>
+      <div id="hint">Sag „Hey Jarvis“</div>
+      <div id="clock"></div>
+    </footer>
   </div>
 
   <script>
+    const NAMESPACE = 'urn:x-cast:com.jarvis.receiver';
     const context = cast.framework.CastReceiverContext.getInstance();
+
+    const titleEl = document.getElementById('title');
+    const subtitleEl = document.getElementById('subtitle');
+    const eyebrowEl = document.getElementById('eyebrow');
+    const contentEl = document.getElementById('content');
+    const hintEl = document.getElementById('hint');
+    const clockEl = document.getElementById('clock');
+    const audioEl = document.getElementById('jarvisAudio');
+
+    function esc(v) {
+      return String(v ?? '')
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'",'&#039;');
+    }
+
+    function header(eyebrow, title, subtitle='') {
+      eyebrowEl.textContent = eyebrow;
+      titleEl.textContent = title;
+      subtitleEl.textContent = subtitle;
+    }
+
+    function showStandby(data={}) {
+      header(data.eyebrow || 'ASSISTENT', data.title || 'Bereit.', data.subtitle || 'Warte auf eine Anfrage.');
+      hintEl.textContent = data.hint || 'Sag „Hey Jarvis“';
+      contentEl.innerHTML = '<div class="standby"><div class="core">ONLINE</div></div>';
+    }
+
+    function showInfo(data={}) {
+      header(data.eyebrow || 'INFORMATION', data.title || 'Information', data.subtitle || '');
+      hintEl.textContent = data.hint || '';
+      contentEl.innerHTML = `<div class="info">${esc(data.text || '')}</div>`;
+    }
+
+    function showIdeas(data={}) {
+      const items = Array.isArray(data.items) ? data.items.slice(0,4) : [];
+      header(data.eyebrow || 'REZEPTAUSWAHL', data.title || 'Was möchtest du kochen?', data.subtitle || 'Ich habe vier Ideen vorbereitet.');
+      hintEl.textContent = data.hint || 'Sag zum Beispiel „Nummer zwei“.';
+      contentEl.innerHTML = `<div class="ideas">${items.map((item,i)=>`
+        <article class="idea">
+          <div class="idea-number">${i+1}</div>
+          <div>
+            <h3>${esc(item.title || item.titel || `Idee ${i+1}`)}</h3>
+            <p>${esc(item.description || item.beschreibung || '')}</p>
+          </div>
+        </article>`).join('')}</div>`;
+    }
+
+    function showRecipe(data={}) {
+      const ingredients = Array.isArray(data.ingredients) ? data.ingredients : (Array.isArray(data.zutaten) ? data.zutaten : []);
+      const steps = Array.isArray(data.steps) ? data.steps : (Array.isArray(data.schritte) ? data.schritte : []);
+      header(data.eyebrow || 'REZEPT', data.title || data.titel || 'Rezept', data.subtitle || '');
+      hintEl.textContent = data.hint || 'Sag „Nächster Schritt“ für die Kochansicht.';
+      contentEl.innerHTML = `
+        <div class="recipe">
+          <section class="panel">
+            <h3>Zutaten</h3>
+            <ul>${ingredients.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>
+          </section>
+          <section class="panel">
+            <h3>Zubereitung</h3>
+            <ol>${steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ol>
+          </section>
+        </div>`;
+    }
+
+    function showStep(data={}) {
+      const index = Number(data.index || 0);
+      const total = Number(data.total || 0);
+      header(data.eyebrow || 'KOCHMODUS', data.title || data.titel || 'Zubereitung', data.subtitle || '');
+      hintEl.textContent = data.hint || 'Sag „Nächster Schritt“ oder „Zurück“.';
+      contentEl.innerHTML = `
+        <div class="step-wrap">
+          <div class="step-card">
+            <div class="step-count">${total ? `Schritt ${index+1} von ${total}` : `Schritt ${index+1}`}</div>
+            <div class="step-text">${esc(data.step || data.text || '')}</div>
+          </div>
+        </div>`;
+    }
+
+    async function speak(data={}) {
+      const url = data.url || data.audioUrl;
+      if (!url) return;
+      try {
+        audioEl.pause();
+        audioEl.src = url;
+        audioEl.currentTime = 0;
+        await audioEl.play();
+      } catch (err) {
+        console.error('JARVIS TTS failed:', err);
+      }
+    }
+
+    function onMessage(message) {
+      const data = message.data || {};
+      const type = String(data.type || '').toUpperCase();
+      console.log('JARVIS message', data);
+
+      switch (type) {
+        case 'STANDBY':
+        case 'CLEAR':
+          showStandby(data); break;
+        case 'SHOW_INFO':
+        case 'INFO':
+          showInfo(data); break;
+        case 'SHOW_IDEAS':
+        case 'IDEAS':
+          showIdeas(data); break;
+        case 'SHOW_RECIPE':
+        case 'RECIPE':
+          showRecipe(data); break;
+        case 'SHOW_STEP':
+        case 'STEP':
+          showStep(data); break;
+        case 'SPEAK':
+          speak(data); break;
+        case 'PING':
+          context.sendCustomMessage(NAMESPACE, message.senderId, {type:'PONG', receiver:'JARVIS', version:'0.1'});
+          break;
+        default:
+          console.warn('Unknown message type', type);
+      }
+    }
+
+    context.addCustomMessageListener(NAMESPACE, onMessage);
+
     const options = new cast.framework.CastReceiverOptions();
-
     options.disableIdleTimeout = true;
-    options.statusText = 'JARVIS Receiver Online';
-
+    options.statusText = 'JARVIS bereit';
     context.start(options);
+
+    function updateClock() {
+      clockEl.textContent = new Intl.DateTimeFormat('de-DE', {
+        hour:'2-digit',
+        minute:'2-digit'
+      }).format(new Date());
+    }
+
+    updateClock();
+    setInterval(updateClock, 1000);
+    showStandby();
   </script>
 </body>
 </html>
