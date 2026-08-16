@@ -233,6 +233,7 @@
   <script>
     const NAMESPACE = 'urn:x-cast:com.jarvis.receiver';
     const context = cast.framework.CastReceiverContext.getInstance();
+const playerManager = context.getPlayerManager();
     const main = document.getElementById('main');
     const debug = document.getElementById('debug');
 
@@ -345,6 +346,90 @@
       `;
     }
 
+    let speechSenderId = null;
+    let speechActive = false;
+
+    async function speakOnReceiver(senderId, url) {
+      if (!url) {
+        try {
+          context.sendCustomMessage(
+            NAMESPACE,
+            senderId,
+            { type: 'SPEAK_ERROR', error: 'Keine Audio-URL erhalten.' }
+          );
+        } catch (_) {}
+        return;
+      }
+
+      speechSenderId = senderId;
+      speechActive = false;
+
+      try {
+        await playerManager.load({
+          autoplay: true,
+          media: {
+            contentId: url,
+            contentType: 'audio/mpeg',
+            streamType: 'BUFFERED',
+            metadata: {
+              metadataType: 0,
+              title: 'JARVIS'
+            }
+          }
+        });
+      } catch (err) {
+        console.error('JARVIS TTS load error:', err);
+
+        try {
+          context.sendCustomMessage(
+            NAMESPACE,
+            senderId,
+            { type: 'SPEAK_ERROR', error: String(err) }
+          );
+        } catch (_) {}
+      }
+    }
+
+    playerManager.addEventListener(
+      cast.framework.events.EventType.PLAYER_STATE_CHANGED,
+      event => {
+        const state = event.playerState;
+
+        if (
+          speechSenderId &&
+          state === cast.framework.messages.PlayerState.PLAYING &&
+          !speechActive
+        ) {
+          speechActive = true;
+
+          try {
+            context.sendCustomMessage(
+              NAMESPACE,
+              speechSenderId,
+              { type: 'SPEAK_STARTED' }
+            );
+          } catch (_) {}
+        }
+
+        if (
+          speechSenderId &&
+          speechActive &&
+          state === cast.framework.messages.PlayerState.IDLE
+        ) {
+          try {
+            context.sendCustomMessage(
+              NAMESPACE,
+              speechSenderId,
+              { type: 'SPEAK_DONE' }
+            );
+          } catch (_) {}
+
+          speechSenderId = null;
+          speechActive = false;
+        }
+      }
+    );
+
     function handleMessage(event) {
       let data = event.data;
 
@@ -380,6 +465,10 @@
         case 'STANDBY':
         case 'SHOW_STANDBY':
           showStandby(data);
+          break;
+
+        case 'SPEAK':
+          speakOnReceiver(event.senderId, data.url);
           break;
 
         default:
