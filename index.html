@@ -26,6 +26,18 @@
       padding: 3.2vh 3.6vw 2.6vh;
     }
 
+    /* Verstecktes CAF-Medienelement:
+       Dadurch kann JARVIS Audio abspielen, ohne die eigene Oberfläche zu verlassen. */
+    .castMediaElement {
+      position: fixed;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+      pointer-events: none;
+      left: -20px;
+      top: -20px;
+    }
+
     .top {
       height: 10vh;
       display: flex;
@@ -64,8 +76,6 @@
       display: flex;
       flex-direction: column;
       justify-content: flex-start;
-      max-width: none;
-      margin: 0;
     }
 
     .eyebrow {
@@ -127,14 +137,12 @@
       font-size: 1.05vw;
       letter-spacing: .18vw;
       margin-bottom: .8vh;
-      flex: 0 0 auto;
     }
 
     .card-title {
       font-size: 2vw;
       line-height: 1.08;
       margin-bottom: .9vh;
-      flex: 0 0 auto;
     }
 
     .desc {
@@ -167,7 +175,6 @@
       pointer-events: none;
     }
 
-    /* Rezeptansicht */
     .recipe-layout {
       flex: 1 1 auto;
       min-height: 0;
@@ -207,6 +214,8 @@
 </head>
 
 <body>
+  <video class="castMediaElement"></video>
+
   <header class="top">
     <div class="brand">JARVIS</div>
     <div class="online"><span class="dot"></span>SYSTEM ONLINE</div>
@@ -216,7 +225,7 @@
     <div class="eyebrow">ASSISTENT</div>
     <h1>Bereit.</h1>
     <div class="subtitle">Warte auf eine Anfrage.</div>
-    <div class="hint">ONLINE</div>
+    <div class="hint">Sag „Jarvis“</div>
   </main>
 
   <div id="debug">Receiver gestartet</div>
@@ -246,7 +255,7 @@
         <div class="eyebrow">${esc(data.eyebrow || 'ASSISTENT')}</div>
         <h1>${esc(data.title || 'Bereit.')}</h1>
         <div class="subtitle">${esc(data.subtitle || 'Warte auf eine Anfrage.')}</div>
-        <div class="hint">${esc(data.hint || 'ONLINE')}</div>
+        <div class="hint">${esc(data.hint || 'Sag „Jarvis“')}</div>
       `;
     }
 
@@ -268,7 +277,7 @@
           `).join('')}
         </div>
 
-        <div class="hint">${esc(data.hint || 'Sag einfach die Nummer.')}</div>
+        <div class="hint">${esc(data.hint || 'Sag „Jarvis“, warte auf „Ja“, und nenne dann die Nummer.')}</div>
       `;
     }
 
@@ -303,7 +312,7 @@
             </section>
           </div>
 
-          <div class="hint">${esc(data.hint || 'Sag „nächster Schritt“ zum Fortfahren.')}</div>
+          <div class="hint">${esc(data.hint || 'Sag „Jarvis“, wenn du noch etwas wissen möchtest.')}</div>
         `;
       } else {
         main.innerHTML = `
@@ -311,7 +320,6 @@
           <h1>${esc(data.title || 'Rezept')}</h1>
           <div class="subtitle">${esc(data.subtitle || '')}</div>
           <div class="text">${esc(data.text || data.content || '')}</div>
-          <div class="hint">${esc(data.hint || 'Sag „nächster Schritt“ zum Fortfahren.')}</div>
         `;
       }
     }
@@ -323,7 +331,7 @@
         <div class="step">
           <div class="text">${esc(data.text || data.content || '')}</div>
         </div>
-        <div class="hint">${esc(data.hint || 'Sag „weiter“, wenn du bereit bist.')}</div>
+        <div class="hint">${esc(data.hint || 'Sag „Jarvis“ für den nächsten Befehl.')}</div>
       `;
     }
 
@@ -331,6 +339,7 @@
       main.innerHTML = `
         <div class="eyebrow">${esc(data.eyebrow || 'INFORMATION')}</div>
         <h1>${esc(data.title || 'JARVIS')}</h1>
+        <div class="subtitle">${esc(data.subtitle || '')}</div>
         <div class="text">${esc(data.text || data.content || '')}</div>
         <div class="hint">${esc(data.hint || '')}</div>
       `;
@@ -373,20 +382,8 @@
           showStandby(data);
           break;
 
-        case 'SPEAK':
-          if (data.text) {
-            showInfo({
-              title: data.title || 'JARVIS',
-              text: data.text
-            });
-          }
-          break;
-
         default:
-          showInfo({
-            title: 'Nachricht empfangen',
-            text: JSON.stringify(data, null, 2)
-          });
+          console.warn('Unbekannte JARVIS-Nachricht:', data);
       }
 
       try {
