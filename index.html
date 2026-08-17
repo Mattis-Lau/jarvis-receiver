@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>JARVIS v1.31 Receiver</title>
+  <title>JARVIS v1.32 Receiver</title>
   <script src="//www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
   <style>
     :root{--cyan:#62e5ff;--blue:#248bff;--ink:#02080d;--panel:#061722;--muted:#76aebc}
@@ -25,7 +25,7 @@
 </head>
 <body>
   <div id="shell">
-    <header><div><div class="brand">J.A.R.V.I.S.</div><div class="version">NEURAL INTERFACE // v1.31</div></div><div class="orb"></div><div class="telemetry">SYSTEM ONLINE<br>PCM 24 KHZ // LIVE</div></header>
+    <header><div><div class="brand">J.A.R.V.I.S.</div><div class="version">NEURAL INTERFACE // v1.32</div></div><div class="orb"></div><div class="telemetry">SYSTEM ONLINE<br>PCM 24 KHZ // LIVE</div></header>
     <main>
       <section id="dashboard">
         <div class="core"><div><h1>JARVIS</h1><p>READY</p></div></div>
@@ -45,7 +45,7 @@
   const NS='urn:x-cast:com.jarvis.receiver';
   const dashboard=document.getElementById('dashboard'), visual=document.getElementById('visual');
   const svgHost=document.getElementById('svgHost'), loading=document.getElementById('loading');
-  let svgChunks=[], audioCtx=null, nextAudioTime=0, sources=new Set(), live=false, mp3Chunks=[], mp3Audio=null;
+  let svgChunks=[], audioCtx=null, nextAudioTime=0, sources=new Set(), live=false, mp3Chunks=[], mp3Audio=null, mp3Url='', mp3Mime='audio/mpeg';
   const send=(senderId,type,extra={})=>{try{cast.framework.CastReceiverContext.getInstance().sendCustomMessage(NS,senderId,{type,...extra})}catch(_) {}};
   const showVisual=(title)=>{dashboard.style.display='none';visual.style.display='grid';document.getElementById('visualTitle').textContent=title||'JARVIS // TECHNICAL VISUAL';};
   const showDashboard=()=>{visual.style.display='none';dashboard.style.display='block';svgHost.replaceChildren();};
@@ -53,14 +53,14 @@
   const beginAudio=(rate)=>{hardStop();audioCtx=new AudioContext({sampleRate:Number(rate)||24000,latencyHint:'interactive'});nextAudioTime=audioCtx.currentTime+.035;live=true;};
   const playPcm=(b64)=>{if(!live||!audioCtx)return;const bin=atob(b64),count=bin.length>>1,buf=audioCtx.createBuffer(1,count,24000),out=buf.getChannelData(0);for(let i=0,j=0;i<count;i++,j+=2){let v=bin.charCodeAt(j)|(bin.charCodeAt(j+1)<<8);if(v&0x8000)v-=0x10000;out[i]=v/32768}const src=audioCtx.createBufferSource();src.buffer=buf;src.connect(audioCtx.destination);const at=Math.max(nextAudioTime,audioCtx.currentTime+.012);src.start(at);nextAudioTime=at+buf.duration;sources.add(src);src.onended=()=>sources.delete(src);};
   const finishAudio=(senderId)=>{live=false;const remaining=Math.max(0,nextAudioTime-(audioCtx?audioCtx.currentTime:0));setTimeout(()=>send(senderId,'SPEAK_DONE'),remaining*1000+30);};
-  const stopMp3=()=>{if(mp3Audio){try{mp3Audio.pause();mp3Audio.currentTime=0}catch(_){}mp3Audio=null}mp3Chunks=[];};
-  const playMp3=(senderId,mime)=>{stopMp3();const b64=mp3Chunks.join('');mp3Audio=new Audio('data:'+(mime||'audio/mpeg')+';base64,'+b64);mp3Audio.onplaying=()=>send(senderId,'SPEAK_STARTED');mp3Audio.onended=()=>send(senderId,'SPEAK_DONE');mp3Audio.onerror=()=>send(senderId,'SPEAK_ERROR',{error:'MP3 playback failed'});mp3Audio.play().catch(err=>send(senderId,'SPEAK_ERROR',{error:String(err)}));};
+  const stopMp3=()=>{if(mp3Audio){try{mp3Audio.pause();mp3Audio.removeAttribute('src');mp3Audio.load()}catch(_){}mp3Audio=null}if(mp3Url){URL.revokeObjectURL(mp3Url);mp3Url=''}};
+  const playMp3=(senderId)=>{const b64=mp3Chunks.join('');mp3Chunks=[];stopMp3();try{const bin=atob(b64),bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);mp3Url=URL.createObjectURL(new Blob([bytes],{type:mp3Mime}));mp3Audio=new Audio();mp3Audio.preload='auto';mp3Audio.onplaying=()=>send(senderId,'SPEAK_STARTED');mp3Audio.onended=()=>{send(senderId,'SPEAK_DONE');stopMp3()};mp3Audio.onerror=()=>send(senderId,'SPEAK_ERROR',{error:'MP3 blob playback failed'});mp3Audio.src=mp3Url;mp3Audio.load();mp3Audio.play().catch(err=>send(senderId,'SPEAK_ERROR',{error:String(err)}))}catch(err){send(senderId,'SPEAK_ERROR',{error:String(err)})}};
   const safeSvg=(raw)=>{const doc=new DOMParser().parseFromString(raw,'image/svg+xml');if(doc.querySelector('parsererror'))return null;doc.querySelectorAll('script,foreignObject,image,use').forEach(n=>n.remove());doc.querySelectorAll('*').forEach(el=>[...el.attributes].forEach(a=>{if(/^on/i.test(a.name)||/href$/i.test(a.name))el.removeAttribute(a.name)}));return document.importNode(doc.documentElement,true);};
   const context=cast.framework.CastReceiverContext.getInstance();
   context.addCustomMessageListener(NS,e=>{const m=typeof e.data==='string'?JSON.parse(e.data):e.data||{};send(e.senderId,'ACK',{receivedType:m.type});switch(m.type){
-    case 'SPEAK_BEGIN':hardStop();stopMp3();mp3Chunks=[];break;
+    case 'SPEAK_BEGIN':hardStop();stopMp3();mp3Chunks=[];mp3Mime=m.mime||'audio/mpeg';break;
     case 'SPEAK_CHUNK':mp3Chunks[Number(m.index)||0]=m.data||'';break;
-    case 'SPEAK_END':playMp3(e.senderId,m.mime||'audio/mpeg');break;
+    case 'SPEAK_END':playMp3(e.senderId);break;
     case 'LIVE_AUDIO_BEGIN':beginAudio(m.sample_rate);send(e.senderId,'SPEAK_STARTED');break;
     case 'LIVE_AUDIO_CHUNK':playPcm(m.data);break;
     case 'LIVE_AUDIO_END':finishAudio(e.senderId);break;
