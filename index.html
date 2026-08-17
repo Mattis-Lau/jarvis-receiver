@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>JARVIS // Core Dashboard</title>
+  <title>JARVIS // Universal Visual Core</title>
   <script src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
   <style>
     :root{color-scheme:dark;--cyan:#67d9ff;--cyan2:#1aa9e8;--panel:rgba(3,15,28,.48);--line:rgba(93,213,255,.22)}
@@ -20,16 +20,19 @@
     .topbar{position:absolute;left:42px;right:42px;top:28px;height:42px;display:flex;align-items:center;justify-content:space-between;z-index:3;letter-spacing:.26em;font-size:14px;color:rgba(132,223,255,.68)}
     .brand{font-weight:600}.clock{font-variant-numeric:tabular-nums}
     .corner{position:absolute;width:34px;height:34px;border-color:rgba(88,211,255,.55);z-index:3}.tl{left:27px;top:23px;border-left:2px solid;border-top:2px solid}.tr{right:27px;top:23px;border-right:2px solid;border-top:2px solid}.bl{left:27px;bottom:23px;border-left:2px solid;border-bottom:2px solid}.br{right:27px;bottom:23px;border-right:2px solid;border-bottom:2px solid}
-    #dashboard{position:absolute;inset:0;z-index:2;transition:opacity .45s ease,transform .55s ease}body.visual #dashboard{opacity:.08;transform:scale(.985);pointer-events:none}
-    .rail{position:absolute;top:145px;width:300px;bottom:125px;display:flex;flex-direction:column;gap:18px}.rail.left{left:52px}.rail.right{right:52px}
-    .panel{border:1px solid var(--line);background:linear-gradient(180deg,rgba(8,27,43,.42),rgba(2,12,23,.27));box-shadow:0 0 28px rgba(0,119,170,.045),inset 0 0 26px rgba(40,172,226,.025);padding:17px 18px 16px;position:relative;overflow:hidden}
+    #dashboard{position:absolute;inset:0;z-index:2;transition:opacity .45s ease,transform .55s ease}body.visual #dashboard{opacity:.025;transform:scale(.99);pointer-events:none}
+    .rail{position:absolute;top:158px;width:245px;display:flex;flex-direction:column;gap:13px}.rail.left{left:58px}.rail.right{right:58px}
+    .panel{border:1px solid var(--line);background:linear-gradient(180deg,rgba(8,27,43,.42),rgba(2,12,23,.27));box-shadow:0 0 28px rgba(0,119,170,.045),inset 0 0 26px rgba(40,172,226,.025);padding:12px 14px 11px;position:relative;overflow:hidden}
     .panel:before{content:"";position:absolute;left:0;top:0;width:32px;height:2px;background:rgba(105,221,255,.66)}
-    .panel h3{font-size:12px;letter-spacing:.22em;margin:0 0 14px;color:rgba(115,218,255,.76);font-weight:600}.big{font-size:28px;color:#d5f6ff;margin-bottom:4px}.muted{font-size:13px;line-height:1.5;color:rgba(155,213,232,.52)}
-    .event{padding:10px 0;border-top:1px solid rgba(90,195,230,.10);display:flex;gap:12px}.event:first-of-type{border-top:0}.time{min-width:46px;color:rgba(106,219,255,.82);font-size:13px}.eventtext{font-size:13px;color:rgba(190,234,246,.68)}
-    .statusrow{display:flex;justify-content:space-between;padding:7px 0;border-top:1px solid rgba(90,195,230,.08);font-size:12px;color:rgba(175,225,239,.58)}.statusrow b{font-weight:500;color:rgba(116,223,255,.82)}
+    .panel h3{font-size:10px;letter-spacing:.22em;margin:0 0 9px;color:rgba(115,218,255,.76);font-weight:600}.big{font-size:21px;color:#d5f6ff;margin-bottom:4px}.muted{font-size:11px;line-height:1.35;color:rgba(155,213,232,.52)}
+    .event{padding:5px 0;border-top:1px solid rgba(90,195,230,.10);display:flex;gap:12px}.event:first-of-type{border-top:0}.time{min-width:46px;color:rgba(106,219,255,.82);font-size:11px}.eventtext{font-size:11px;color:rgba(190,234,246,.68)}
+    .statusrow{display:flex;justify-content:space-between;padding:5px 0;border-top:1px solid rgba(90,195,230,.08);font-size:10.5px;color:rgba(175,225,239,.58)}.statusrow b{font-weight:500;color:rgba(116,223,255,.82)}
     #coreLabel{position:absolute;left:50%;bottom:92px;transform:translateX(-50%);z-index:3;text-align:center;transition:left .55s ease,opacity .3s ease}.coreName{font-size:15px;letter-spacing:.40em;color:rgba(130,229,255,.78);margin-left:.4em}.coreState{margin-top:8px;font-size:10px;letter-spacing:.25em;color:rgba(118,198,226,.42)}body.visual #coreLabel{left:27%}
     #visualMeta{position:absolute;left:49%;right:5.5%;top:105px;z-index:4;opacity:0;transform:translateY(8px);transition:opacity .45s ease,transform .45s ease;pointer-events:none}body.visual #visualMeta{opacity:1;transform:none}.visualTitle{font-size:19px;letter-spacing:.18em;color:rgba(157,236,255,.9)}.visualHint{margin-top:7px;font-size:11px;letter-spacing:.16em;color:rgba(117,192,218,.48)}
     #persistentTag{position:absolute;right:55px;bottom:38px;z-index:4;opacity:0;transition:opacity .4s ease;font-size:10px;letter-spacing:.19em;color:rgba(101,205,239,.48)}body.visual #persistentTag{opacity:1}
+    #svgVisual{position:absolute;left:43%;right:3.5%;top:105px;bottom:62px;z-index:3;opacity:0;transform:translateX(18px);transition:opacity .5s ease,transform .55s ease;pointer-events:none;display:flex;align-items:center;justify-content:center}
+    body.visual #svgVisual{opacity:1;transform:none}
+    #svgVisual svg{width:100%;height:100%;display:block;filter:drop-shadow(0 0 12px rgba(35,183,240,.13))}
     #debug,#jarvisAudio{display:none}
   </style>
 </head>
@@ -69,17 +72,18 @@
   </div>
   <canvas id="coreCanvas"></canvas>
   <canvas id="diagramCanvas"></canvas>
+  <div id="svgVisual" aria-hidden="true"></div>
   <div id="coreLabel"><div class="coreName">JARVIS</div><div id="coreState" class="coreState">STANDBY // CORE ONLINE</div></div>
-  <div id="visualMeta"><div id="visualTitle" class="visualTitle">TECHNISCHE DARSTELLUNG</div><div class="visualHint">ANSICHT BLEIBT AKTIV // „DANKE“ ZUM SCHLIESSEN</div></div>
+  <div id="visualMeta"><div id="visualTitle" class="visualTitle">JARVIS // VISUALISIERUNG</div><div class="visualHint">ANSICHT BLEIBT AKTIV // „DANKE“ ZUM SCHLIESSEN</div></div>
   <div id="persistentTag">PERSISTENT VISUAL // ACTIVE</div>
 </div>
 <div id="debug"></div><audio id="jarvisAudio" preload="auto"></audio>
 <script>
 const NAMESPACE='urn:x-cast:com.jarvis.receiver';
 const context=cast.framework.CastReceiverContext.getInstance();
-const coreCanvas=document.getElementById('coreCanvas'), diagramCanvas=document.getElementById('diagramCanvas');
+const coreCanvas=document.getElementById('coreCanvas'), diagramCanvas=document.getElementById('diagramCanvas'), svgVisual=document.getElementById('svgVisual');
 const ctx=coreCanvas.getContext('2d'), dctx=diagramCanvas.getContext('2d'), audio=document.getElementById('jarvisAudio');
-let W=1920,H=1080,DPR=1,state='standby',stateChanged=performance.now(),visualActive=false,diagramData=null;
+let W=1920,H=1080,DPR=1,state='standby',stateChanged=performance.now(),visualActive=false,diagramData=null,svgData=null;
 let audioContext=null,analyser=null,mediaSource=null,analyserData=null,audioLevel=0,smoothAudio=0;
 const particles=[]; for(let i=0;i<210;i++){const a=Math.random()*Math.PI*2,r=Math.pow(Math.random(),.58);particles.push({a,r,dr:(Math.random()-.5)*.22,s:.6+Math.random()*1.5,p:Math.random()*6.28})}
 const STATES={standby:{spin:.00012,pulse:.018,energy:.56},active:{spin:.00019,pulse:.035,energy:.75},listening:{spin:.00028,pulse:.060,energy:.98},transcribing:{spin:.00038,pulse:.050,energy:.92},understood:{spin:.00030,pulse:.055,energy:.96},thinking:{spin:.00055,pulse:.085,energy:1.14},speaking:{spin:.00034,pulse:.110,energy:1.22},followup:{spin:.00017,pulse:.025,energy:.72}};
@@ -100,14 +104,21 @@ function drawCore(t){readAudio();smoothAudio+=(audioLevel-smoothAudio)*.17;const
 function rounded(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath()}
 function arrow(x1,y1,x2,y2,a){const ang=Math.atan2(y2-y1,x2-x1),h=10;dctx.strokeStyle=`rgba(85,211,255,${a})`;dctx.fillStyle=`rgba(110,225,255,${a})`;dctx.lineWidth=1.2;dctx.beginPath();dctx.moveTo(x1,y1);dctx.lineTo(x2,y2);dctx.stroke();dctx.beginPath();dctx.moveTo(x2,y2);dctx.lineTo(x2-h*Math.cos(ang-.45),y2-h*Math.sin(ang-.45));dctx.lineTo(x2-h*Math.cos(ang+.45),y2-h*Math.sin(ang+.45));dctx.closePath();dctx.fill()}
 function drawDiagram(data){dctx.clearRect(0,0,W,H);if(!data||!Array.isArray(data.nodes)||!data.nodes.length)return;const nodes=data.nodes.slice(0,8),cx=W*.72,cy=H*.52,rx=Math.min(W*.20,320),ry=Math.min(H*.27,235),bw=Math.min(238,W*.145),bh=72,pos=[];for(let i=0;i<nodes.length;i++){let x,y;if(data.kind==='cycle'){const a=-Math.PI/2+i*Math.PI*2/nodes.length;x=cx+Math.cos(a)*rx;y=cy+Math.sin(a)*ry}else{const cols=Math.min(3,nodes.length),rows=Math.ceil(nodes.length/cols),col=i%cols,row=Math.floor(i/cols);x=cx+(col-(cols-1)/2)*270;y=cy+(row-(rows-1)/2)*145}pos.push({x,y})}for(let i=0;i<pos.length;i++){const a=pos[i],b=data.kind==='cycle'?pos[(i+1)%pos.length]:pos[i+1];if(!b)continue;const dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy)||1,ux=dx/l,uy=dy/l;arrow(a.x+ux*bw*.52,a.y+uy*bh*.42,b.x-ux*bw*.52,b.y-uy*bh*.42,.36)}for(let i=0;i<nodes.length;i++){const n=nodes[i],p=pos[i];rounded(dctx,p.x-bw/2,p.y-bh/2,bw,bh,9);dctx.fillStyle='rgba(3,18,31,.67)';dctx.fill();dctx.strokeStyle='rgba(87,213,255,.52)';dctx.lineWidth=1.1;dctx.stroke();dctx.textAlign='center';dctx.textBaseline='middle';dctx.font='600 16px Arial';dctx.fillStyle='rgba(188,242,255,.94)';dctx.fillText(String(n.label||''),p.x,p.y-9);dctx.font='400 11px Arial';dctx.fillStyle='rgba(121,194,219,.72)';dctx.fillText(String(n.sub||'').slice(0,40),p.x,p.y+13)}}
-function showDiagram(data){diagramData=data||null;visualActive=!!diagramData;document.body.classList.toggle('visual',visualActive);diagramCanvas.classList.toggle('visible',visualActive);if(visualActive){document.getElementById('visualTitle').textContent=(diagramData.title||'TECHNISCHE DARSTELLUNG').toUpperCase();drawDiagram(diagramData);setState('thinking')}}
-function hideVisualization(){visualActive=false;diagramData=null;document.body.classList.remove('visual');diagramCanvas.classList.remove('visible');dctx.clearRect(0,0,W,H);setState('standby')}
+function showDiagram(data){diagramData=data||null;visualActive=!!diagramData;document.body.classList.toggle('visual',visualActive);diagramCanvas.classList.toggle('visible',visualActive);if(visualActive){document.getElementById('visualTitle').textContent=(diagramData.title||'JARVIS // VISUALISIERUNG').toUpperCase();drawDiagram(diagramData);setState('thinking')}}
+function showSVG(data){
+  const raw=String((data&&data.svg)||'');if(!raw.trim().startsWith('<svg'))return;
+  svgData=raw;diagramData=null;dctx.clearRect(0,0,W,H);diagramCanvas.classList.remove('visible');
+  svgVisual.innerHTML=raw;visualActive=true;document.body.classList.add('visual');
+  document.getElementById('visualTitle').textContent=String((data&&data.title)||'JARVIS // VISUALISIERUNG').toUpperCase();
+  setState('thinking');
+}
+function hideVisualization(){visualActive=false;diagramData=null;svgData=null;svgVisual.innerHTML='';document.body.classList.remove('visual');diagramCanvas.classList.remove('visible');dctx.clearRect(0,0,W,H);setState('standby')}
 let senderId=null,chunks=[],expected=0,mime='audio/mpeg',objUrl=null;function sendSpeech(type,extra={}){if(!senderId)return;try{context.sendCustomMessage(NAMESPACE,senderId,Object.assign({type},extra))}catch(e){}}
 function speechBegin(id,data){senderId=id;expected=Number(data.chunks||0);mime=data.mime||'audio/mpeg';chunks=new Array(expected);setState('speaking')}
 function speechChunk(data){const i=Number(data.index);if(Number.isInteger(i)&&i>=0&&i<chunks.length)chunks[i]=data.data||''}
 async function speechEnd(){try{if(!expected||chunks.some(x=>typeof x!=='string'))throw new Error('TTS-Chunks unvollstaendig');const bin=atob(chunks.join('')),bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);if(objUrl)URL.revokeObjectURL(objUrl);objUrl=URL.createObjectURL(new Blob([bytes],{type:mime}));audio.src=objUrl;audio.currentTime=0;ensureAnalyser();await audio.play()}catch(e){sendSpeech('SPEAK_ERROR',{error:String(e)});resetSpeech()}}
 function resetSpeech(){senderId=null;chunks=[];expected=0}audio.addEventListener('playing',()=>{setState('speaking');sendSpeech('SPEAK_STARTED')});audio.addEventListener('ended',()=>{sendSpeech('SPEAK_DONE');setState('followup');resetSpeech()});audio.addEventListener('error',()=>{sendSpeech('SPEAK_ERROR',{error:'HTMLAudioElement Fehler'});setState('followup');resetSpeech()});
-function handleMessage(event){let data=event.data;if(typeof data==='string'){try{data=JSON.parse(data)}catch(_){data={type:'SHOW_INFO',text:data}}}if(!data||typeof data!=='object')return;switch(data.type){case'SHOW_STATE':setState(data.state||'active');break;case'SHOW_DIAGRAM':showDiagram(data.diagram||{});break;case'HIDE_VISUALIZATION':hideVisualization();break;case'SHOW_INFO':if(state!=='speaking')setState('followup');break;case'STANDBY':case'SHOW_STANDBY':if(!visualActive)setState('standby');break;case'SPEAK_BEGIN':speechBegin(event.senderId,data);break;case'SPEAK_CHUNK':speechChunk(data);break;case'SPEAK_END':speechEnd();break;}if(data.type!=='SPEAK_CHUNK'){try{context.sendCustomMessage(NAMESPACE,event.senderId,{type:'ACK',receivedType:data.type||null})}catch(e){}}}
+function handleMessage(event){let data=event.data;if(typeof data==='string'){try{data=JSON.parse(data)}catch(_){data={type:'SHOW_INFO',text:data}}}if(!data||typeof data!=='object')return;switch(data.type){case'SHOW_STATE':setState(data.state||'active');break;case'SHOW_DIAGRAM':showDiagram(data.diagram||{});break;case'SHOW_SVG':showSVG(data);break;case'HIDE_VISUALIZATION':hideVisualization();break;case'SHOW_INFO':if(state!=='speaking')setState('followup');break;case'STANDBY':case'SHOW_STANDBY':if(!visualActive)setState('standby');break;case'SPEAK_BEGIN':speechBegin(event.senderId,data);break;case'SPEAK_CHUNK':speechChunk(data);break;case'SPEAK_END':speechEnd();break;}if(data.type!=='SPEAK_CHUNK'){try{context.sendCustomMessage(NAMESPACE,event.senderId,{type:'ACK',receivedType:data.type||null})}catch(e){}}}
 function updateClock(){const d=new Date();document.getElementById('clock').textContent=d.toLocaleTimeString('de-DE',{hour12:false})+' // SYSTEM ONLINE';document.getElementById('dateBig').textContent=d.toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'}).toUpperCase();document.getElementById('dateSub').textContent=d.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}
 addEventListener('resize',resize);resize();updateClock();setInterval(updateClock,1000);requestAnimationFrame(drawCore);context.addCustomMessageListener(NAMESPACE,handleMessage);const options=new cast.framework.CastReceiverOptions();options.disableIdleTimeout=true;options.statusText='JARVIS';options.customNamespaces={};options.customNamespaces[NAMESPACE]=cast.framework.system.MessageType.JSON;context.start(options);
 </script>
