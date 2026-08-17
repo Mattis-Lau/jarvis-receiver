@@ -1,81 +1,48 @@
 <!doctype html>
-<html lang="de">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>JARVIS v1.36 Receiver</title>
-  <script src="//www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
-  <style>
-    :root{--cyan:#62e5ff;--blue:#248bff;--ink:#02080d;--panel:#061722;--muted:#76aebc}
-    *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#01060a;color:#dffaff;font-family:Arial,sans-serif}
-    body:before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 50% 48%,#0c3042 0,#04121b 34%,#01060a 74%),repeating-linear-gradient(0deg,transparent 0 3px,#5de4ff08 4px);pointer-events:none}
-    #shell{position:absolute;inset:3.5vh 3vw;border:1px solid #5de4ff35;clip-path:polygon(0 22px,22px 0,100% 0,100% calc(100% - 22px),calc(100% - 22px) 100%,0 100%)}
-    #shell:before,#shell:after{content:"";position:absolute;left:3%;right:3%;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.45}#shell:before{top:5.8rem}#shell:after{bottom:3.7rem}
-    header{height:5.8rem;padding:1.25rem 3%;display:flex;align-items:center;justify-content:space-between;letter-spacing:.16em}
-    .brand{font-size:1.65rem;font-weight:600;text-shadow:0 0 18px #59ddff}.version,.telemetry{font-size:.72rem;color:var(--muted)}
-    .orb{width:2.8rem;height:2.8rem;border:1px solid var(--cyan);border-radius:50%;box-shadow:0 0 22px #4bdcff88,inset 0 0 15px #4bdcff55;animation:pulse 2.4s ease-in-out infinite}
-    main{position:absolute;left:3%;right:3%;top:6.6rem;bottom:4.5rem;display:grid;place-items:center}
-    #dashboard{position:absolute;inset:0;text-align:center;display:grid;grid-template-columns:1fr minmax(280px,32vw) 1fr;grid-template-rows:1fr 1fr;gap:1.2rem 2rem;align-items:center}.core{grid-column:2;grid-row:1/3;justify-self:center;width:23vw;height:23vw;max-width:350px;max-height:350px;border:1px solid #64e8ff55;border-radius:50%;display:grid;place-items:center;box-shadow:0 0 70px #188ecb25,inset 0 0 70px #188ecb18;position:relative}.core:before,.core:after{content:"";position:absolute;border-radius:50%;border:2px dashed #5fe6ff44;inset:8%;animation:spin 18s linear infinite}.core:after{inset:21%;border-style:solid;border-width:1px;animation-direction:reverse;animation-duration:9s}.core h1{font-size:2rem;letter-spacing:.22em;margin:0}.core p{color:var(--muted);letter-spacing:.12em}.tile{height:76%;min-height:108px;text-align:left;padding:1.05rem 1.2rem;background:linear-gradient(135deg,#071b27cc,#031019bb);border:1px solid #5ee4ff45;clip-path:polygon(0 12px,12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%);box-shadow:inset 0 0 28px #1baee814;position:relative}.tile:nth-child(2),.tile:nth-child(3){justify-self:end}.tile:nth-child(4),.tile:nth-child(5){justify-self:start}.tile-label{font-size:.68rem;letter-spacing:.18em;color:#64ddf8}.tile-value{font-size:1.45rem;margin-top:.55rem;color:#e2fbff}.tile-detail{font-size:.72rem;color:#76aebc;margin-top:.35rem}.tile:after{content:"";position:absolute;left:1.2rem;right:1.2rem;bottom:.65rem;height:1px;background:linear-gradient(90deg,#62e5ff88,transparent)}
-    #status{position:absolute;left:50%;bottom:3%;transform:translateX(-50%);width:34%;text-align:center;z-index:3}#statusTitle{font-size:1.05rem;letter-spacing:.08em}#statusDetail{margin-top:.35rem;color:var(--muted);font-size:.8rem}
-    #visual{position:absolute;inset:0;display:none;grid-template-rows:auto 1fr}.visual-head{padding:.5rem 1.5rem;color:#aeefff;font-size:.78rem;letter-spacing:.2em}.visual-stage{min-height:0;display:grid;place-items:center;position:relative}.visual-stage:before{content:"";position:absolute;inset:2%;border:1px solid #59ddff19;background:linear-gradient(90deg,#5ce4ff12 1px,transparent 1px),linear-gradient(#5ce4ff12 1px,transparent 1px);background-size:44px 44px;mask-image:radial-gradient(circle,#000 25%,transparent 78%)}#svgHost{position:absolute;inset:0;display:grid;place-items:center}#svgHost svg{width:100%;height:100%;filter:drop-shadow(0 0 10px #27cfff29)}
-    #loading{font-size:1rem;letter-spacing:.24em;color:var(--cyan);animation:pulse 1.2s infinite}.hidden{display:none!important}
-    footer{position:absolute;left:3%;right:3%;bottom:1.25rem;display:flex;justify-content:space-between;font-size:.65rem;color:#6096a3;letter-spacing:.12em}
-    @keyframes spin{to{transform:rotate(360deg)}}@keyframes pulse{50%{opacity:.45;transform:scale(.985)}}
-  </style>
-</head>
-<body>
-  <div id="shell">
-    <header><div><div class="brand">J.A.R.V.I.S.</div><div class="version">NEURAL INTERFACE // v1.36</div></div><div class="orb"></div><div class="telemetry">SYSTEM ONLINE<br>PCM 24 KHZ // LIVE</div></header>
-    <main>
-      <section id="dashboard">
-        <div class="core"><div><h1>JARVIS</h1><p>READY</p></div></div>
-        <div class="tile"><div class="tile-label">KALENDER</div><div class="tile-value" id="dateTile">--.--.----</div><div class="tile-detail">Persönliche Übersicht</div></div>
-        <div class="tile"><div class="tile-label">WETTER</div><div class="tile-value">BEREIT</div><div class="tile-detail">Vorhersage und aktuelle Wetterlage</div></div>
-        <div class="tile"><div class="tile-label">HAUS // SPÄTER</div><div class="tile-value">ENERGIE</div><div class="tile-detail">PV-Anlage · Speicher · Wärmepumpe</div></div>
-        <div class="tile"><div class="tile-label">JARVIS SYSTEM</div><div class="tile-value">ONLINE</div><div class="tile-detail">Voice · Visual · Memory</div></div>
-      </section>
-      <section id="visual"><div class="visual-head" id="visualTitle">JARVIS // TECHNICAL VISUAL</div><div class="visual-stage"><div id="loading">ANALYSIERE SYSTEMSTRUKTUR …</div><div id="svgHost"></div></div></section>
-      <div id="status"><div id="statusTitle">Bereit</div><div id="statusDetail">Warte auf Aktivierung.</div></div>
-    </main>
-    <footer><span>VOICE LINK // ECHO-GATED BARGE-IN</span><span id="clock"></span></footer>
-  </div>
+<html lang="de"><head><meta charset="utf-8"><title>JARVIS v1.40</title>
+<script src="//www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
+<style>
+:root{--cyan:#57e6ff;--blue:#168cba;--ink:#02070b;--line:rgba(87,230,255,.28)}
+*{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#010508;color:#dffaff;font-family:Arial,sans-serif}
+body:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,#0b2833 0,#031017 38%,#010508 72%),repeating-linear-gradient(0deg,transparent 0 4px,rgba(87,230,255,.025) 5px);}
+#shell{position:absolute;inset:4.5vh 5vw;border:1px solid var(--line);clip-path:polygon(2% 0,98% 0,100% 4%,100% 96%,98% 100%,2% 100%,0 96%,0 4%);padding:4vh 4vw;background:linear-gradient(135deg,rgba(5,29,39,.55),rgba(1,7,10,.15));box-shadow:inset 0 0 70px rgba(15,160,210,.08)}
+#top{display:flex;justify-content:space-between;letter-spacing:.28em;font-size:1.25vw;color:var(--cyan);border-bottom:1px solid var(--line);padding-bottom:1.5vh}#state{opacity:.8}
+#content{position:absolute;left:4vw;right:4vw;top:10vh;bottom:6vh;display:flex;align-items:center;justify-content:center}
+#text{max-width:82%;text-align:center}h1{font-size:3.2vw;letter-spacing:.13em;margin:0 0 2vh;text-transform:uppercase}p{font-size:1.65vw;line-height:1.5;color:#b9dce5;white-space:pre-wrap}
+#visual{width:100%;height:100%;display:none;filter:drop-shadow(0 0 12px rgba(87,230,255,.28))}#visual svg{width:100%;height:100%}
+.grid{width:100%;display:grid;grid-template-columns:repeat(2,1fr);gap:2vw}.card{min-height:20vh;border:1px solid var(--line);padding:2vw;background:rgba(4,27,36,.62);position:relative}.card:before{content:"";position:absolute;left:0;top:0;width:2.5vw;border-top:3px solid var(--cyan)}
+.card h2{color:var(--cyan);font-size:1.7vw;letter-spacing:.08em}.card p{font-size:1.2vw;text-align:left}.pulse{animation:pulse 1.7s infinite}@keyframes pulse{50%{opacity:.35}}
+</style></head><body><main id="shell"><header id="top"><span>JARVIS // HYBRID CORE</span><span id="state">BEREIT</span></header><section id="content"><div id="text"><h1 id="title">Bereit.</h1><p id="subtitle">Sag „Jarvis“.</p></div><div id="visual"></div></section></main>
 <script>
-(() => {
-  'use strict';
-  const NS='urn:x-cast:com.jarvis.receiver';
-  const dashboard=document.getElementById('dashboard'), visual=document.getElementById('visual');
-  const svgHost=document.getElementById('svgHost'), loading=document.getElementById('loading');
-  let svgChunks=[], audioCtx=null, nextAudioTime=0, sources=new Set(), live=false, pcmBufferRate=24000, mp3Chunks=[], mp3Audio=null, mp3Url='', mp3Mime='audio/mpeg';
-  const send=(senderId,type,extra={})=>{try{cast.framework.CastReceiverContext.getInstance().sendCustomMessage(NS,senderId,{type,...extra})}catch(_) {}};
-  const showVisual=(title)=>{dashboard.style.display='none';visual.style.display='grid';document.getElementById('visualTitle').textContent=title||'JARVIS // TECHNICAL VISUAL';};
-  const showDashboard=()=>{visual.style.display='none';dashboard.style.display='block';svgHost.replaceChildren();};
-  const hardStop=()=>{live=false;sources.forEach(s=>{try{s.stop(0)}catch(_){}});sources.clear();nextAudioTime=0;if(audioCtx){try{audioCtx.close()}catch(_){}audioCtx=null;}};
-  const beginAudio=(rate,playbackRate)=>{hardStop();const sourceRate=Number(rate)||24000;const factor=Math.max(.88,Math.min(1.05,Number(playbackRate)||1));pcmBufferRate=sourceRate*factor;audioCtx=new AudioContext({sampleRate:sourceRate,latencyHint:'interactive'});nextAudioTime=audioCtx.currentTime+.035;live=true;};
-  const playPcm=(b64)=>{if(!live||!audioCtx)return;const bin=atob(b64),count=bin.length>>1,buf=audioCtx.createBuffer(1,count,pcmBufferRate),out=buf.getChannelData(0);for(let i=0,j=0;i<count;i++,j+=2){let v=bin.charCodeAt(j)|(bin.charCodeAt(j+1)<<8);if(v&0x8000)v-=0x10000;out[i]=v/32768}const src=audioCtx.createBufferSource();src.buffer=buf;src.connect(audioCtx.destination);const at=Math.max(nextAudioTime,audioCtx.currentTime+.012);src.start(at);nextAudioTime=at+buf.duration;sources.add(src);src.onended=()=>sources.delete(src);};
-  const finishAudio=(senderId)=>{live=false;const remaining=Math.max(0,nextAudioTime-(audioCtx?audioCtx.currentTime:0));setTimeout(()=>send(senderId,'SPEAK_DONE'),remaining*1000+30);};
-  const stopMp3=()=>{if(mp3Audio){try{mp3Audio.pause();mp3Audio.removeAttribute('src');mp3Audio.load()}catch(_){}mp3Audio=null}if(mp3Url){URL.revokeObjectURL(mp3Url);mp3Url=''}};
-  const playMp3=(senderId)=>{const b64=mp3Chunks.join('');mp3Chunks=[];stopMp3();try{const bin=atob(b64),bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);mp3Url=URL.createObjectURL(new Blob([bytes],{type:mp3Mime}));mp3Audio=new Audio();mp3Audio.preload='auto';mp3Audio.onplaying=()=>send(senderId,'SPEAK_STARTED');mp3Audio.onended=()=>{send(senderId,'SPEAK_DONE');stopMp3()};mp3Audio.onerror=()=>send(senderId,'SPEAK_ERROR',{error:'MP3 blob playback failed'});mp3Audio.src=mp3Url;mp3Audio.load();mp3Audio.play().catch(err=>send(senderId,'SPEAK_ERROR',{error:String(err)}))}catch(err){send(senderId,'SPEAK_ERROR',{error:String(err)})}};
-  const safeSvg=(raw)=>{const doc=new DOMParser().parseFromString(raw,'image/svg+xml');if(doc.querySelector('parsererror'))return null;doc.querySelectorAll('script,foreignObject,image,use').forEach(n=>n.remove());doc.querySelectorAll('*').forEach(el=>[...el.attributes].forEach(a=>{if(/^on/i.test(a.name)||/href$/i.test(a.name))el.removeAttribute(a.name)}));return document.importNode(doc.documentElement,true);};
-  const context=cast.framework.CastReceiverContext.getInstance();
-  context.addCustomMessageListener(NS,e=>{const m=typeof e.data==='string'?JSON.parse(e.data):e.data||{};if(m.type!=='LIVE_AUDIO_CHUNK'&&m.type!=='SPEAK_CHUNK')send(e.senderId,'ACK',{receivedType:m.type});switch(m.type){
-    case 'SPEAK_BEGIN':hardStop();stopMp3();mp3Chunks=[];mp3Mime=m.mime||'audio/mpeg';break;
-    case 'SPEAK_CHUNK':mp3Chunks[Number(m.index)||0]=m.data||'';break;
-    case 'SPEAK_END':playMp3(e.senderId);break;
-    case 'LIVE_AUDIO_BEGIN':beginAudio(m.sample_rate,m.playback_rate);send(e.senderId,'SPEAK_STARTED');break;
-    case 'LIVE_AUDIO_CHUNK':playPcm(m.data);break;
-    case 'LIVE_AUDIO_END':finishAudio(e.senderId);break;
-    case 'LIVE_AUDIO_STOP':hardStop();stopMp3();send(e.senderId,'SPEAK_DONE',{interrupted:true});break;
-    case 'SHOW_VISUAL_LOADING':showVisual(m.title);loading.classList.remove('hidden');svgHost.replaceChildren();break;
-    case 'SHOW_SVG_BEGIN':showVisual(m.title);svgChunks=[];break;
-    case 'SHOW_SVG_CHUNK':svgChunks[Number(m.index)||0]=m.data||'';break;
-    case 'SHOW_SVG_END':{const node=safeSvg(svgChunks.join(''));if(node){svgHost.replaceChildren(node);loading.classList.add('hidden')}break;}
-    case 'HIDE_VISUAL':case 'HIDE_VISUALIZATION':case 'SHOW_DASHBOARD':case 'STANDBY':showDashboard();break;
-    case 'SHOW_STATE':document.getElementById('statusTitle').textContent=m.status||m.title||'JARVIS';document.getElementById('statusDetail').textContent=m.detail||'';break;
-    case 'SHOW_INFO':document.getElementById('statusTitle').textContent=m.title||'JARVIS';document.getElementById('statusDetail').textContent=m.text||m.detail||'';break;
-  }});
-  context.start({disableIdleTimeout:true});
-  const tick=()=>{const d=new Date();document.getElementById('clock').textContent=d.toLocaleTimeString('de-DE')+' // EUROPE BERLIN';document.getElementById('dateTile').textContent=d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'})};tick();setInterval(tick,1000);
-})();
-</script>
-</body>
-</html>
+const NS='urn:x-cast:com.jarvis.receiver', ctx=cast.framework.CastReceiverContext.getInstance();
+const $=id=>document.getElementById(id), title=$('title'), subtitle=$('subtitle'), text=$('text'), visual=$('visual'), state=$('state');
+let svgParts=[], legacyParts=[], ttsBlocks=new Map(), readyBlocks=new Map(), expectedBlocks=0, queueEnded=false, playing=false, currentAudio=null, stopped=false;
+const send=(type,extra={})=>{for(const sender of ctx.getSenders())ctx.sendCustomMessage(NS,sender.id,{type,...extra})};
+const showText=(t,s,st='AKTIV')=>{visual.style.display='none';text.style.display='block';title.textContent=t||'JARVIS';subtitle.textContent=s||'';state.textContent=st};
+const stopAudio=(notify=true)=>{stopped=true;if(currentAudio){currentAudio.pause();currentAudio.src='';currentAudio=null}readyBlocks.forEach(x=>URL.revokeObjectURL(x));readyBlocks.clear();ttsBlocks.clear();playing=false;if(notify)send('SPEAK_DONE')};
+async function playQueue(){if(playing||stopped)return;playing=true;send('SPEAK_STARTED');let i=0;while(!stopped){const url=readyBlocks.get(i);if(!url){if(queueEnded&&i>=expectedBlocks)break;await new Promise(r=>setTimeout(r,25));continue}readyBlocks.delete(i++);await new Promise(resolve=>{const a=currentAudio=new Audio(url);a.preload='auto';a.onended=a.onerror=()=>{URL.revokeObjectURL(url);resolve()};a.play().catch(resolve)});}playing=false;currentAudio=null;if(!stopped)send('SPEAK_DONE')}
+function assemble(index){const parts=ttsBlocks.get(index)||[];if(!parts.length)return;const raw=atob(parts.join('')), bytes=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);readyBlocks.set(index,URL.createObjectURL(new Blob([bytes],{type:'audio/mpeg'})));playQueue()}
+function cards(items){visual.innerHTML='<div class="grid">'+items.map((x,i)=>`<article class="card"><h2>${i+1} // ${esc(x.titel||x.label||x.name||'MODUL')}</h2><p>${esc(x.beschreibung||x.sub||x.description||'')}</p></article>`).join('')+'</div>';text.style.display='none';visual.style.display='block'}
+const esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ctx.addCustomMessageListener(NS,e=>{const d=typeof e.data==='string'?JSON.parse(e.data):e.data||{};try{switch(d.type){
+case 'STANDBY':case 'SHOW_INFO':case 'SHOW_STATE':showText(d.title,d.subtitle||d.text,d.state||'AKTIV');break;
+case 'SHOW_VISUAL_LOADING':showText(d.title||'VISUALISIERUNG','Technische Darstellung wird synchronisiert …','ANALYSE');title.classList.add('pulse');break;
+case 'SHOW_SVG_BEGIN':svgParts=new Array(d.chunks||0);title.classList.remove('pulse');break;
+case 'SHOW_SVG_CHUNK':svgParts[d.index]=d.data;break;
+case 'SHOW_SVG_END':visual.innerHTML=svgParts.join('');text.style.display='none';visual.style.display='block';state.textContent='VISUAL';break;
+case 'HIDE_VISUALIZATION':showText('Bereit.','Sag „Jarvis“.','BEREIT');break;
+case 'SHOW_IDEAS':cards(d.ideas||d.items||[]);break;
+case 'SHOW_RECIPE':cards([{titel:d.title||d.titel,beschreibung:[...(d.ingredients||d.zutaten||[]),...(d.steps||d.schritte||[])].join('\n')}]);break;
+case 'SHOW_DIAGRAM':cards(d.nodes||[]);break;
+case 'TTS_QUEUE_BEGIN':stopAudio(false);stopped=false;expectedBlocks=d.blocks||0;queueEnded=false;state.textContent='SPRICHT';break;
+case 'TTS_BLOCK_BEGIN':ttsBlocks.set(d.index,new Array(d.chunks||0));break;
+case 'TTS_BLOCK_CHUNK':ttsBlocks.get(d.index)[d.chunk]=d.data;break;
+case 'TTS_BLOCK_END':assemble(d.index);break;
+case 'TTS_QUEUE_END':queueEnded=true;playQueue();break;
+case 'SPEAK_BEGIN':stopAudio(false);stopped=false;legacyParts=new Array(d.chunks||0);state.textContent='SPRICHT';break;
+case 'SPEAK_CHUNK':legacyParts[d.index]=d.data;break;
+case 'SPEAK_END':ttsBlocks.set(0,legacyParts);expectedBlocks=1;queueEnded=true;assemble(0);break;
+case 'SPEAK_STOP':stopAudio();break;
+}}catch(err){send('SPEAK_ERROR',{error:String(err)})}});
+const opts=new cast.framework.CastReceiverOptions();opts.disableIdleTimeout=true;ctx.start(opts);
+</script></body></html>
