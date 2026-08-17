@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>JARVIS v1.33 Receiver</title>
+  <title>JARVIS v1.34 Receiver</title>
   <script src="//www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
   <style>
     :root{--cyan:#62e5ff;--blue:#248bff;--ink:#02080d;--panel:#061722;--muted:#76aebc}
@@ -25,7 +25,7 @@
 </head>
 <body>
   <div id="shell">
-    <header><div><div class="brand">J.A.R.V.I.S.</div><div class="version">NEURAL INTERFACE // v1.33</div></div><div class="orb"></div><div class="telemetry">SYSTEM ONLINE<br>PCM 24 KHZ // LIVE</div></header>
+    <header><div><div class="brand">J.A.R.V.I.S.</div><div class="version">NEURAL INTERFACE // v1.34</div></div><div class="orb"></div><div class="telemetry">SYSTEM ONLINE<br>PCM 24 KHZ // LIVE</div></header>
     <main>
       <section id="dashboard">
         <div class="core"><div><h1>JARVIS</h1><p>READY</p></div></div>
@@ -57,7 +57,7 @@
   const playMp3=(senderId)=>{const b64=mp3Chunks.join('');mp3Chunks=[];stopMp3();try{const bin=atob(b64),bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);mp3Url=URL.createObjectURL(new Blob([bytes],{type:mp3Mime}));mp3Audio=new Audio();mp3Audio.preload='auto';mp3Audio.onplaying=()=>send(senderId,'SPEAK_STARTED');mp3Audio.onended=()=>{send(senderId,'SPEAK_DONE');stopMp3()};mp3Audio.onerror=()=>send(senderId,'SPEAK_ERROR',{error:'MP3 blob playback failed'});mp3Audio.src=mp3Url;mp3Audio.load();mp3Audio.play().catch(err=>send(senderId,'SPEAK_ERROR',{error:String(err)}))}catch(err){send(senderId,'SPEAK_ERROR',{error:String(err)})}};
   const safeSvg=(raw)=>{const doc=new DOMParser().parseFromString(raw,'image/svg+xml');if(doc.querySelector('parsererror'))return null;doc.querySelectorAll('script,foreignObject,image,use').forEach(n=>n.remove());doc.querySelectorAll('*').forEach(el=>[...el.attributes].forEach(a=>{if(/^on/i.test(a.name)||/href$/i.test(a.name))el.removeAttribute(a.name)}));return document.importNode(doc.documentElement,true);};
   const context=cast.framework.CastReceiverContext.getInstance();
-  context.addCustomMessageListener(NS,e=>{const m=typeof e.data==='string'?JSON.parse(e.data):e.data||{};send(e.senderId,'ACK',{receivedType:m.type});switch(m.type){
+  context.addCustomMessageListener(NS,e=>{const m=typeof e.data==='string'?JSON.parse(e.data):e.data||{};if(m.type!=='LIVE_AUDIO_CHUNK'&&m.type!=='SPEAK_CHUNK')send(e.senderId,'ACK',{receivedType:m.type});switch(m.type){
     case 'SPEAK_BEGIN':hardStop();stopMp3();mp3Chunks=[];mp3Mime=m.mime||'audio/mpeg';break;
     case 'SPEAK_CHUNK':mp3Chunks[Number(m.index)||0]=m.data||'';break;
     case 'SPEAK_END':playMp3(e.senderId);break;
