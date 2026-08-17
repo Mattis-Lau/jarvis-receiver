@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>JARVIS v1.32 Receiver</title>
+  <title>JARVIS v1.33 Receiver</title>
   <script src="//www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
   <style>
     :root{--cyan:#62e5ff;--blue:#248bff;--ink:#02080d;--panel:#061722;--muted:#76aebc}
@@ -25,14 +25,14 @@
 </head>
 <body>
   <div id="shell">
-    <header><div><div class="brand">J.A.R.V.I.S.</div><div class="version">NEURAL INTERFACE // v1.32</div></div><div class="orb"></div><div class="telemetry">SYSTEM ONLINE<br>PCM 24 KHZ // LIVE</div></header>
+    <header><div><div class="brand">J.A.R.V.I.S.</div><div class="version">NEURAL INTERFACE // v1.33</div></div><div class="orb"></div><div class="telemetry">SYSTEM ONLINE<br>PCM 24 KHZ // LIVE</div></header>
     <main>
       <section id="dashboard">
         <div class="core"><div><h1>JARVIS</h1><p>READY</p></div></div>
-        <div class="tile"><div class="tile-label">WETTER</div><div class="tile-value">BEREIT</div><div class="tile-detail">Wetterabfrage per Sprache</div></div>
         <div class="tile"><div class="tile-label">KALENDER</div><div class="tile-value" id="dateTile">--.--.----</div><div class="tile-detail">Persönliche Übersicht</div></div>
-        <div class="tile"><div class="tile-label">LOKALZEIT</div><div class="tile-value" id="timeTile">--:--</div><div class="tile-detail">Europe / Berlin</div></div>
-        <div class="tile"><div class="tile-label">SYSTEM</div><div class="tile-value">ONLINE</div><div class="tile-detail">Voice · Visual · Memory</div></div>
+        <div class="tile"><div class="tile-label">WETTER</div><div class="tile-value">BEREIT</div><div class="tile-detail">Vorhersage und aktuelle Wetterlage</div></div>
+        <div class="tile"><div class="tile-label">HAUS // SPÄTER</div><div class="tile-value">ENERGIE</div><div class="tile-detail">PV-Anlage · Speicher · Wärmepumpe</div></div>
+        <div class="tile"><div class="tile-label">JARVIS SYSTEM</div><div class="tile-value">ONLINE</div><div class="tile-detail">Voice · Visual · Memory</div></div>
       </section>
       <section id="visual"><div class="visual-head" id="visualTitle">JARVIS // TECHNICAL VISUAL</div><div class="visual-stage"><div id="loading">ANALYSIERE SYSTEMSTRUKTUR …</div><div id="svgHost"></div></div></section>
       <div id="status"><div id="statusTitle">Bereit</div><div id="statusDetail">Warte auf Aktivierung.</div></div>
@@ -74,7 +74,7 @@
     case 'SHOW_INFO':document.getElementById('statusTitle').textContent=m.title||'JARVIS';document.getElementById('statusDetail').textContent=m.text||m.detail||'';break;
   }});
   context.start({disableIdleTimeout:true});
-  const tick=()=>{const d=new Date();document.getElementById('clock').textContent=d.toLocaleTimeString('de-DE')+' // EUROPE BERLIN';document.getElementById('timeTile').textContent=d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});document.getElementById('dateTile').textContent=d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'})};tick();setInterval(tick,1000);
+  const tick=()=>{const d=new Date();document.getElementById('clock').textContent=d.toLocaleTimeString('de-DE')+' // EUROPE BERLIN';document.getElementById('dateTile').textContent=d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'})};tick();setInterval(tick,1000);
 })();
 </script>
 </body>
