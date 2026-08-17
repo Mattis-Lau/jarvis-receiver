@@ -1,168 +1,70 @@
 <!doctype html>
 <html lang="de">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>JARVIS // Visual Dashboard v0.95</title>
-  <script src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>JARVIS v1.30 Receiver</title>
+  <script src="//www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
   <style>
-    :root{color-scheme:dark;--cyan:#67d9ff;--cyan2:#1aa9e8;--panel:rgba(3,15,28,.48);--line:rgba(93,213,255,.22)}
-    *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#02060b}
-    body{font-family:Arial,Helvetica,sans-serif;color:#bfefff}
-    #scene{position:fixed;inset:0;overflow:hidden;background:
-      radial-gradient(circle at 50% 46%,rgba(10,69,102,.18),transparent 35%),
-      radial-gradient(circle at 15% 25%,rgba(0,126,178,.07),transparent 24%),
-      radial-gradient(circle at 82% 72%,rgba(0,78,140,.06),transparent 28%),
-      linear-gradient(180deg,#07101a 0%,#02070d 50%,#010308 100%)}
-    #scene:after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 180px rgba(0,0,0,.9);background:linear-gradient(180deg,rgba(0,0,0,.18),transparent 20%,transparent 80%,rgba(0,0,0,.38))}
-    .grid{position:absolute;inset:0;opacity:.11;background-image:linear-gradient(rgba(85,198,238,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(85,198,238,.12) 1px,transparent 1px);background-size:62px 62px;mask-image:radial-gradient(circle at center,black,transparent 76%)}
-    #coreCanvas,#diagramCanvas{position:absolute;inset:0;width:100%;height:100%}#diagramCanvas{opacity:0;transition:opacity .55s ease;pointer-events:none}#diagramCanvas.visible{opacity:1}
-    .topbar{position:absolute;left:42px;right:42px;top:28px;height:42px;display:flex;align-items:center;justify-content:space-between;z-index:3;letter-spacing:.26em;font-size:14px;color:rgba(132,223,255,.68)}
-    .brand{font-weight:600}.clock{font-variant-numeric:tabular-nums}
-    .corner{position:absolute;width:34px;height:34px;border-color:rgba(88,211,255,.55);z-index:3}.tl{left:27px;top:23px;border-left:2px solid;border-top:2px solid}.tr{right:27px;top:23px;border-right:2px solid;border-top:2px solid}.bl{left:27px;bottom:23px;border-left:2px solid;border-bottom:2px solid}.br{right:27px;bottom:23px;border-right:2px solid;border-bottom:2px solid}
-    #dashboard{position:absolute;inset:0;z-index:2;transition:opacity .38s ease,transform .45s ease}body.visual #dashboard{opacity:0;transform:scale(.985);pointer-events:none}
-    .panel{position:absolute;width:222px;min-height:112px;border:1px solid var(--line);background:linear-gradient(180deg,rgba(8,27,43,.42),rgba(2,12,23,.27));box-shadow:0 0 24px rgba(0,119,170,.04),inset 0 0 22px rgba(40,172,226,.025);padding:11px 13px 10px;overflow:hidden}
-    .panel:before{content:"";position:absolute;left:0;top:0;width:30px;height:2px;background:rgba(105,221,255,.66)}
-    .panel.calendar{left:54px;top:125px}.panel.weather{right:54px;top:125px}.panel.system{left:54px;bottom:72px}.panel.house{right:54px;bottom:72px}
-    .panel h3{font-size:9.5px;letter-spacing:.22em;margin:0 0 8px;color:rgba(115,218,255,.76);font-weight:600}.big{font-size:19px;color:#d5f6ff;margin-bottom:3px}.muted{font-size:10px;line-height:1.3;color:rgba(155,213,232,.52)}
-    .event{padding:4px 0;border-top:1px solid rgba(90,195,230,.10);display:flex;gap:10px}.event:first-of-type{border-top:0}.time{min-width:40px;color:rgba(106,219,255,.82);font-size:10px}.eventtext{font-size:10px;color:rgba(190,234,246,.68)}
-    .statusrow{display:flex;justify-content:space-between;padding:4px 0;border-top:1px solid rgba(90,195,230,.08);font-size:9.8px;color:rgba(175,225,239,.58)}.statusrow b{font-weight:500;color:rgba(116,223,255,.82)}
-    #coreLabel{position:absolute;left:50%;bottom:78px;transform:translateX(-50%);z-index:3;text-align:center;transition:left .5s ease,bottom .5s ease,opacity .3s ease}.coreName{font-size:15px;letter-spacing:.40em;color:rgba(130,229,255,.78);margin-left:.4em}.coreState{margin-top:8px;font-size:9.5px;letter-spacing:.25em;color:rgba(118,198,226,.42)}body.visual #coreLabel{left:19.5%;bottom:108px}
-    #visualMeta{position:absolute;left:29%;right:3%;top:78px;z-index:4;opacity:0;transform:translateY(8px);transition:opacity .4s ease,transform .4s ease;pointer-events:none}body.visual #visualMeta{opacity:1;transform:none}.visualTitle{font-size:18px;letter-spacing:.18em;color:rgba(157,236,255,.9)}.visualHint{margin-top:6px;font-size:10px;letter-spacing:.15em;color:rgba(117,192,218,.48)}
-    #persistentTag{position:absolute;right:50px;bottom:34px;z-index:4;opacity:0;transition:opacity .35s ease;font-size:9px;letter-spacing:.18em;color:rgba(101,205,239,.46)}body.visual #persistentTag{opacity:1}
-    #svgVisual{position:absolute;left:27%;right:1.8%;top:105px;bottom:38px;z-index:3;opacity:0;transform:translateX(16px);transition:opacity .45s ease,transform .5s ease;pointer-events:none;display:flex;align-items:center;justify-content:center}
-    body.visual #svgVisual{opacity:1;transform:none}
-    #svgVisual svg{width:100%;height:100%;display:block;filter:drop-shadow(0 0 12px rgba(35,183,240,.13))}
-    #debug,#jarvisAudio{display:none}
+    :root{--cyan:#62e5ff;--blue:#248bff;--ink:#02080d;--panel:#061722;--muted:#76aebc}
+    *{box-sizing:border-box}html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#01060a;color:#dffaff;font-family:Arial,sans-serif}
+    body:before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 50% 48%,#0c3042 0,#04121b 34%,#01060a 74%),repeating-linear-gradient(0deg,transparent 0 3px,#5de4ff08 4px);pointer-events:none}
+    #shell{position:absolute;inset:3.5vh 3vw;border:1px solid #5de4ff35;clip-path:polygon(0 22px,22px 0,100% 0,100% calc(100% - 22px),calc(100% - 22px) 100%,0 100%)}
+    #shell:before,#shell:after{content:"";position:absolute;left:3%;right:3%;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.45}#shell:before{top:5.8rem}#shell:after{bottom:3.7rem}
+    header{height:5.8rem;padding:1.25rem 3%;display:flex;align-items:center;justify-content:space-between;letter-spacing:.16em}
+    .brand{font-size:1.65rem;font-weight:600;text-shadow:0 0 18px #59ddff}.version,.telemetry{font-size:.72rem;color:var(--muted)}
+    .orb{width:2.8rem;height:2.8rem;border:1px solid var(--cyan);border-radius:50%;box-shadow:0 0 22px #4bdcff88,inset 0 0 15px #4bdcff55;animation:pulse 2.4s ease-in-out infinite}
+    main{position:absolute;left:3%;right:3%;top:6.6rem;bottom:4.5rem;display:grid;place-items:center}
+    #dashboard{text-align:center}.core{width:24vw;height:24vw;max-width:370px;max-height:370px;border:1px solid #64e8ff55;border-radius:50%;display:grid;place-items:center;box-shadow:0 0 70px #188ecb25,inset 0 0 70px #188ecb18;position:relative}.core:before,.core:after{content:"";position:absolute;border-radius:50%;border:2px dashed #5fe6ff44;inset:8%;animation:spin 18s linear infinite}.core:after{inset:21%;border-style:solid;border-width:1px;animation-direction:reverse;animation-duration:9s}.core h1{font-size:2.1rem;letter-spacing:.22em;margin:0}.core p{color:var(--muted);letter-spacing:.12em}
+    #status{position:absolute;left:4%;bottom:5%;max-width:42%;text-align:left}#statusTitle{font-size:1.35rem;letter-spacing:.08em}#statusDetail{margin-top:.5rem;color:var(--muted)}
+    #visual{position:absolute;inset:0;display:none;grid-template-rows:auto 1fr}.visual-head{padding:.5rem 1.5rem;color:#aeefff;font-size:.78rem;letter-spacing:.2em}.visual-stage{min-height:0;display:grid;place-items:center;position:relative}.visual-stage:before{content:"";position:absolute;inset:2%;border:1px solid #59ddff19;background:linear-gradient(90deg,#5ce4ff12 1px,transparent 1px),linear-gradient(#5ce4ff12 1px,transparent 1px);background-size:44px 44px;mask-image:radial-gradient(circle,#000 25%,transparent 78%)}#svgHost{position:absolute;inset:0;display:grid;place-items:center}#svgHost svg{width:100%;height:100%;filter:drop-shadow(0 0 10px #27cfff29)}
+    #loading{font-size:1rem;letter-spacing:.24em;color:var(--cyan);animation:pulse 1.2s infinite}.hidden{display:none!important}
+    footer{position:absolute;left:3%;right:3%;bottom:1.25rem;display:flex;justify-content:space-between;font-size:.65rem;color:#6096a3;letter-spacing:.12em}
+    @keyframes spin{to{transform:rotate(360deg)}}@keyframes pulse{50%{opacity:.45;transform:scale(.985)}}
   </style>
 </head>
 <body>
-<div id="scene">
-  <div class="grid"></div>
-  <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
-  <div class="topbar"><div class="brand">JARVIS // CORE INTERFACE</div><div id="clock" class="clock">SYSTEM ONLINE</div></div>
-  <div id="dashboard">
-    <div class="panel calendar">
-      <h3>KALENDER</h3>
-      <div id="dateBig" class="big">HEUTE</div>
-      <div id="dateSub" class="muted">Kalender kann später verbunden werden.</div>
-      <div class="event"><div class="time">—</div><div class="eventtext">Keine Kalenderquelle verbunden</div></div>
-    </div>
-    <div class="panel weather">
-      <h3>WETTER</h3>
-      <div class="big">— °C</div>
-      <div class="muted">Wetterquelle noch nicht verbunden.</div>
-    </div>
-    <div class="panel system">
-      <h3>JARVIS SYSTEM</h3>
-      <div class="statusrow"><span>Receiver</span><b>ONLINE</b></div>
-      <div class="statusrow"><span>Voice Link</span><b>READY</b></div>
-      <div class="statusrow"><span>Visual Core</span><b>ACTIVE</b></div>
-    </div>
-    <div class="panel house">
-      <h3>HAUS</h3>
-      <div class="statusrow"><span>PV</span><b>—</b></div>
-      <div class="statusrow"><span>Speicher</span><b>—</b></div>
-      <div class="statusrow"><span>Wärmepumpe</span><b>—</b></div>
-    </div>
+  <div id="shell">
+    <header><div><div class="brand">J.A.R.V.I.S.</div><div class="version">NEURAL INTERFACE // v1.30</div></div><div class="orb"></div><div class="telemetry">SYSTEM ONLINE<br>PCM 24 KHZ // LIVE</div></header>
+    <main>
+      <section id="dashboard"><div class="core"><div><h1>JARVIS</h1><p>READY</p></div></div></section>
+      <section id="visual"><div class="visual-head" id="visualTitle">JARVIS // TECHNICAL VISUAL</div><div class="visual-stage"><div id="loading">ANALYSIERE SYSTEMSTRUKTUR …</div><div id="svgHost"></div></div></section>
+      <div id="status"><div id="statusTitle">Bereit</div><div id="statusDetail">Warte auf Aktivierung.</div></div>
+    </main>
+    <footer><span>VOICE LINK // ECHO-GATED BARGE-IN</span><span id="clock"></span></footer>
   </div>
-  <canvas id="coreCanvas"></canvas>
-  <canvas id="diagramCanvas"></canvas>
-  <div id="svgVisual" aria-hidden="true"></div>
-  <div id="coreLabel"><div class="coreName">JARVIS</div><div id="coreState" class="coreState">STANDBY // CORE ONLINE</div></div>
-  <div id="visualMeta"><div id="visualTitle" class="visualTitle">JARVIS // VISUALISIERUNG</div><div class="visualHint">LIVE VISUAL // „DANKE“ ZUM SCHLIESSEN</div></div>
-  <div id="persistentTag">PERSISTENT VISUAL // ACTIVE</div>
-</div>
-<div id="debug"></div><audio id="jarvisAudio" preload="auto"></audio>
 <script>
-const NAMESPACE='urn:x-cast:com.jarvis.receiver';
-const context=cast.framework.CastReceiverContext.getInstance();
-const coreCanvas=document.getElementById('coreCanvas'), diagramCanvas=document.getElementById('diagramCanvas'), svgVisual=document.getElementById('svgVisual');
-const ctx=coreCanvas.getContext('2d'), dctx=diagramCanvas.getContext('2d'), audio=document.getElementById('jarvisAudio');
-let W=1920,H=1080,DPR=1,state='standby',stateChanged=performance.now(),visualActive=false,diagramData=null,svgData=null;
-let audioContext=null,analyser=null,mediaSource=null,analyserData=null,audioLevel=0,smoothAudio=0;
-const particles=[]; for(let i=0;i<210;i++){const a=Math.random()*Math.PI*2,r=Math.pow(Math.random(),.58);particles.push({a,r,dr:(Math.random()-.5)*.22,s:.6+Math.random()*1.5,p:Math.random()*6.28})}
-const STATES={standby:{spin:.00012,pulse:.018,energy:.56},active:{spin:.00019,pulse:.035,energy:.75},listening:{spin:.00028,pulse:.060,energy:.98},transcribing:{spin:.00038,pulse:.050,energy:.92},understood:{spin:.00030,pulse:.055,energy:.96},thinking:{spin:.00055,pulse:.085,energy:1.14},speaking:{spin:.00034,pulse:.110,energy:1.22},followup:{spin:.00017,pulse:.025,energy:.72}};
-function setState(s){state=STATES[s]?s:'active';stateChanged=performance.now();document.getElementById('coreState').textContent=state.toUpperCase()+' // CORE ACTIVE'}
-function resize(){W=innerWidth;H=innerHeight;DPR=1;for(const c of [coreCanvas,diagramCanvas]){c.width=W;c.height=H;c.style.width=W+'px';c.style.height=H+'px'}ctx.setTransform(1,0,0,1,0,0);dctx.setTransform(1,0,0,1,0,0);if(diagramData)drawDiagram(diagramData)}
-function ensureAnalyser(){try{if(!audioContext)audioContext=new (window.AudioContext||window.webkitAudioContext)();if(!mediaSource){analyser=audioContext.createAnalyser();analyser.fftSize=128;analyser.smoothingTimeConstant=.84;analyserData=new Uint8Array(analyser.frequencyBinCount);mediaSource=audioContext.createMediaElementSource(audio);mediaSource.connect(analyser);analyser.connect(audioContext.destination)}if(audioContext.state==='suspended')audioContext.resume()}catch(e){}}
-function readAudio(){if(!analyser||!analyserData||audio.paused){audioLevel*=.85;return}analyser.getByteFrequencyData(analyserData);let s=0,n=Math.min(34,analyserData.length);for(let i=2;i<n;i++)s+=analyserData[i];audioLevel=Math.min(1,(s/Math.max(1,n-2))/132)}
-function ring(cx,cy,r,a,w=1){ctx.beginPath();ctx.strokeStyle=`rgba(88,213,255,${a})`;ctx.lineWidth=w;ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke()}
-function arcSeg(cx,cy,r,start,len,a,w=2){ctx.beginPath();ctx.strokeStyle=`rgba(104,225,255,${a})`;ctx.lineWidth=w;ctx.arc(cx,cy,r,start,start+len);ctx.stroke()}
-function drawCore(t){readAudio();smoothAudio+=(audioLevel-smoothAudio)*.17;const c=STATES[state]||STATES.active;const speaking=state==='speaking'?smoothAudio:0;const cx=visualActive?W*.195:W*.50,cy=H*.50,base=Math.min(W,H)*(visualActive?.135:.226);const pulse=1+c.pulse*Math.sin(t*.0022)+speaking*.08;ctx.clearRect(0,0,W,H);
-  const g=ctx.createRadialGradient(cx,cy,0,cx,cy,base*.95);g.addColorStop(0,`rgba(38,185,255,${.12*c.energy+speaking*.05})`);g.addColorStop(.35,`rgba(13,110,174,${.06*c.energy})`);g.addColorStop(1,'rgba(0,20,34,0)');ctx.fillStyle=g;ctx.fillRect(cx-base,cy-base,base*2,base*2);
-  ring(cx,cy,base*.50*pulse,.28*c.energy,1);ring(cx,cy,base*.72,.20*c.energy,1);ring(cx,cy,base*.86,.36*c.energy,1.1);ring(cx,cy,base*.94,.12*c.energy,1);
-  const spin=t*c.spin;for(let i=0;i<12;i++){const a=spin+i*Math.PI/6;arcSeg(cx,cy,base*.86,a,.20+.05*Math.sin(t*.001+i),.65*c.energy,2)}for(let i=0;i<8;i++){const a=-spin*.72+i*Math.PI/4;arcSeg(cx,cy,base*.72,a,.12,.35*c.energy,1.3)}
-  for(let i=0;i<36;i++){const a=i*Math.PI*2/36+spin*.45;const ri=base*.98,ro=base*(1.015+(i%3)*.012);ctx.beginPath();ctx.strokeStyle=`rgba(106,221,255,${.18*c.energy})`;ctx.lineWidth=1;ctx.moveTo(cx+Math.cos(a)*ri,cy+Math.sin(a)*ri);ctx.lineTo(cx+Math.cos(a)*ro,cy+Math.sin(a)*ro);ctx.stroke()}
-  for(const p of particles){const a=p.a+spin*(1+p.dr),r=base*(.08+p.r*.39)*(1+.045*Math.sin(t*.002+p.p)+speaking*.12);const x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r*.88;ctx.beginPath();ctx.fillStyle=`rgba(92,220,255,${(.18+.48*(1-p.r))*c.energy})`;ctx.arc(x,y,p.s*(1+speaking*.3),0,Math.PI*2);ctx.fill()}
-  const coreR=base*(.055+.018*Math.sin(t*.003)+speaking*.035),cg=ctx.createRadialGradient(cx,cy,0,cx,cy,coreR*4);cg.addColorStop(0,'rgba(215,251,255,.98)');cg.addColorStop(.12,`rgba(95,225,255,${.92*c.energy})`);cg.addColorStop(.45,`rgba(27,166,230,${.30*c.energy})`);cg.addColorStop(1,'rgba(0,80,140,0)');ctx.fillStyle=cg;ctx.fillRect(cx-coreR*4,cy-coreR*4,coreR*8,coreR*8);
-  requestAnimationFrame(drawCore)}
-function rounded(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath()}
-function arrow(x1,y1,x2,y2,a){const ang=Math.atan2(y2-y1,x2-x1),h=10;dctx.strokeStyle=`rgba(85,211,255,${a})`;dctx.fillStyle=`rgba(110,225,255,${a})`;dctx.lineWidth=1.2;dctx.beginPath();dctx.moveTo(x1,y1);dctx.lineTo(x2,y2);dctx.stroke();dctx.beginPath();dctx.moveTo(x2,y2);dctx.lineTo(x2-h*Math.cos(ang-.45),y2-h*Math.sin(ang-.45));dctx.lineTo(x2-h*Math.cos(ang+.45),y2-h*Math.sin(ang+.45));dctx.closePath();dctx.fill()}
-function drawDiagram(data){dctx.clearRect(0,0,W,H);if(!data||!Array.isArray(data.nodes)||!data.nodes.length)return;const nodes=data.nodes.slice(0,8),cx=W*.72,cy=H*.52,rx=Math.min(W*.20,320),ry=Math.min(H*.27,235),bw=Math.min(238,W*.145),bh=72,pos=[];for(let i=0;i<nodes.length;i++){let x,y;if(data.kind==='cycle'){const a=-Math.PI/2+i*Math.PI*2/nodes.length;x=cx+Math.cos(a)*rx;y=cy+Math.sin(a)*ry}else{const cols=Math.min(3,nodes.length),rows=Math.ceil(nodes.length/cols),col=i%cols,row=Math.floor(i/cols);x=cx+(col-(cols-1)/2)*270;y=cy+(row-(rows-1)/2)*145}pos.push({x,y})}for(let i=0;i<pos.length;i++){const a=pos[i],b=data.kind==='cycle'?pos[(i+1)%pos.length]:pos[i+1];if(!b)continue;const dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy)||1,ux=dx/l,uy=dy/l;arrow(a.x+ux*bw*.52,a.y+uy*bh*.42,b.x-ux*bw*.52,b.y-uy*bh*.42,.36)}for(let i=0;i<nodes.length;i++){const n=nodes[i],p=pos[i];rounded(dctx,p.x-bw/2,p.y-bh/2,bw,bh,9);dctx.fillStyle='rgba(3,18,31,.67)';dctx.fill();dctx.strokeStyle='rgba(87,213,255,.52)';dctx.lineWidth=1.1;dctx.stroke();dctx.textAlign='center';dctx.textBaseline='middle';dctx.font='600 16px Arial';dctx.fillStyle='rgba(188,242,255,.94)';dctx.fillText(String(n.label||''),p.x,p.y-9);dctx.font='400 11px Arial';dctx.fillStyle='rgba(121,194,219,.72)';dctx.fillText(String(n.sub||'').slice(0,40),p.x,p.y+13)}}
-function showDiagram(data){diagramData=data||null;visualActive=!!diagramData;document.body.classList.toggle('visual',visualActive);diagramCanvas.classList.toggle('visible',visualActive);if(visualActive){document.getElementById('visualTitle').textContent=(diagramData.title||'JARVIS // VISUALISIERUNG').toUpperCase();drawDiagram(diagramData);setState('thinking')}}
-let svgChunks=[],svgExpected=0;
-function showVisualLoading(data){
-  visualActive=true;diagramData=null;svgData=null;svgVisual.innerHTML='';dctx.clearRect(0,0,W,H);diagramCanvas.classList.remove('visible');
-  document.body.classList.add('visual');
-  document.getElementById('visualTitle').textContent=String((data&&data.title)||'JARVIS // VISUALISIERUNG').toUpperCase();
-  svgVisual.innerHTML='<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:500 21px Arial;letter-spacing:.22em;color:rgba(130,220,245,.72)">VISUALISIERUNG WIRD ERSTELLT...</div>';
-  setState('thinking');
-}
-function svgBegin(data){
-  showVisualLoading(data);svgExpected=Number((data&&data.chunks)||0);svgChunks=new Array(svgExpected);
-}
-function svgChunk(data){const i=Number(data.index);if(Number.isInteger(i)&&i>=0&&i<svgChunks.length)svgChunks[i]=String(data.data||'');}
-function svgEnd(){
-  if(!svgExpected||svgChunks.some(x=>typeof x!=='string')){console.warn('SVG-Chunks unvollstaendig');return;}
-  showSVG({title:'JARVIS // VISUALISIERUNG',svg:svgChunks.join('')});svgChunks=[];svgExpected=0;
-}
-function showSVG(data){
-  const raw=String((data&&data.svg)||'');if(!raw.trim().startsWith('<svg')){console.warn('SHOW_SVG ohne gueltiges SVG');return;}
-  svgData=raw;diagramData=null;dctx.clearRect(0,0,W,H);diagramCanvas.classList.remove('visible');
-  svgVisual.innerHTML=raw;visualActive=true;document.body.classList.add('visual');
-  document.getElementById('visualTitle').textContent=String((data&&data.title)||'JARVIS // VISUALISIERUNG').toUpperCase();
-  setState('thinking');
-}
-function hideVisualization(){visualActive=false;diagramData=null;svgData=null;svgVisual.innerHTML='';document.body.classList.remove('visual');diagramCanvas.classList.remove('visible');dctx.clearRect(0,0,W,H);setState('standby')}
-let senderId=null,chunks=[],expected=0,mime='audio/mpeg',objUrl=null;function sendSpeech(type,extra={}){if(!senderId)return;try{context.sendCustomMessage(NAMESPACE,senderId,Object.assign({type},extra))}catch(e){}}
-function speechBegin(id,data){senderId=id;expected=Number(data.chunks||0);mime=data.mime||'audio/mpeg';chunks=new Array(expected);setState('speaking')}
-function speechChunk(data){const i=Number(data.index);if(Number.isInteger(i)&&i>=0&&i<chunks.length)chunks[i]=data.data||''}
-async function speechEnd(){try{if(!expected||chunks.some(x=>typeof x!=='string'))throw new Error('TTS-Chunks unvollstaendig');const bin=atob(chunks.join('')),bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);if(objUrl)URL.revokeObjectURL(objUrl);objUrl=URL.createObjectURL(new Blob([bytes],{type:mime}));audio.src=objUrl;audio.currentTime=0;ensureAnalyser();await audio.play()}catch(e){sendSpeech('SPEAK_ERROR',{error:String(e)});resetSpeech()}}
-function resetSpeech(){senderId=null;chunks=[];expected=0}audio.addEventListener('playing',()=>{setState('speaking');sendSpeech('SPEAK_STARTED')});audio.addEventListener('ended',()=>{sendSpeech('SPEAK_DONE');setState('followup');resetSpeech()});audio.addEventListener('error',()=>{sendSpeech('SPEAK_ERROR',{error:'HTMLAudioElement Fehler'});setState('followup');resetSpeech()});
-
-let liveSenderId=null,liveCtx=null,liveAnalyser=null,liveNextTime=0,liveStarted=false,liveEndRequested=false,liveEndTimer=null;
-function liveSend(type,extra={}){if(!liveSenderId)return;try{context.sendCustomMessage(NAMESPACE,liveSenderId,Object.assign({type},extra))}catch(e){}}
-function ensureLiveAudio(){
-  if(!liveCtx){liveCtx=new (window.AudioContext||window.webkitAudioContext)();liveAnalyser=liveCtx.createAnalyser();liveAnalyser.fftSize=128;liveAnalyser.smoothingTimeConstant=.82;liveAnalyser.connect(liveCtx.destination)}
-  if(liveCtx.state==='suspended')liveCtx.resume();
-}
-function liveAudioBegin(id,data){
-  liveSenderId=id;ensureLiveAudio();liveNextTime=Math.max(liveCtx.currentTime+.055,liveNextTime);liveStarted=false;liveEndRequested=false;
-  if(liveEndTimer){clearTimeout(liveEndTimer);liveEndTimer=null}setState('speaking');
-}
-function liveAudioChunk(data){
-  try{
-    ensureLiveAudio();const bin=atob(String(data.data||''));if(!bin.length)return;
-    const samples=Math.floor(bin.length/2),buffer=liveCtx.createBuffer(1,samples,Number(data.sample_rate||24000));
-    const out=buffer.getChannelData(0);const dv=new DataView(new ArrayBuffer(samples*2));
-    for(let i=0;i<samples*2;i++)dv.setUint8(i,bin.charCodeAt(i));
-    for(let i=0;i<samples;i++)out[i]=dv.getInt16(i*2,true)/32768;
-    const src=liveCtx.createBufferSource();src.buffer=buffer;src.connect(liveAnalyser);
-    const now=liveCtx.currentTime;const when=Math.max(now+.025,liveNextTime);src.start(when);liveNextTime=when+buffer.duration;
-    if(!liveStarted){liveStarted=true;setState('speaking');liveSend('SPEAK_STARTED')}
-  }catch(e){liveSend('SPEAK_ERROR',{error:String(e)})}
-}
-function liveAudioEnd(){
-  liveEndRequested=true;if(!liveCtx){liveSend('SPEAK_DONE');return}
-  const ms=Math.max(20,(liveNextTime-liveCtx.currentTime)*1000+35);
-  if(liveEndTimer)clearTimeout(liveEndTimer);
-  liveEndTimer=setTimeout(()=>{liveSend('SPEAK_DONE');setState('followup');liveSenderId=null;liveStarted=false;liveEndRequested=false},ms);
-}
-
-function handleMessage(event){let data=event.data;if(typeof data==='string'){try{data=JSON.parse(data)}catch(_){data={type:'SHOW_INFO',text:data}}}if(!data||typeof data!=='object')return;switch(data.type){case'SHOW_STATE':setState(data.state||'active');break;case'SHOW_DIAGRAM':showDiagram(data.diagram||{});break;case'SHOW_VISUAL_LOADING':showVisualLoading(data);break;case'SHOW_SVG_BEGIN':svgBegin(data);break;case'SHOW_SVG_CHUNK':svgChunk(data);break;case'SHOW_SVG_END':svgEnd();break;case'SHOW_SVG':showSVG(data);break;case'HIDE_VISUALIZATION':hideVisualization();break;case'SHOW_INFO':if(state!=='speaking')setState('followup');break;case'STANDBY':case'SHOW_STANDBY':if(!visualActive)setState('standby');break;case'SPEAK_BEGIN':speechBegin(event.senderId,data);break;case'SPEAK_CHUNK':speechChunk(data);break;case'SPEAK_END':speechEnd();break;case'LIVE_AUDIO_BEGIN':liveAudioBegin(event.senderId,data);break;case'LIVE_AUDIO_CHUNK':liveAudioChunk(data);break;case'LIVE_AUDIO_END':liveAudioEnd();break;}if(data.type!=='SPEAK_CHUNK'){try{context.sendCustomMessage(NAMESPACE,event.senderId,{type:'ACK',receivedType:data.type||null})}catch(e){}}}
-function updateClock(){const d=new Date();document.getElementById('clock').textContent=d.toLocaleTimeString('de-DE',{hour12:false})+' // SYSTEM ONLINE';document.getElementById('dateBig').textContent=d.toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'}).toUpperCase();document.getElementById('dateSub').textContent=d.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}
-addEventListener('resize',resize);resize();updateClock();setInterval(updateClock,1000);requestAnimationFrame(drawCore);context.addCustomMessageListener(NAMESPACE,handleMessage);const options=new cast.framework.CastReceiverOptions();options.disableIdleTimeout=true;options.statusText='JARVIS';options.customNamespaces={};options.customNamespaces[NAMESPACE]=cast.framework.system.MessageType.JSON;context.start(options);
+(() => {
+  'use strict';
+  const NS='urn:x-cast:com.jarvis.receiver';
+  const dashboard=document.getElementById('dashboard'), visual=document.getElementById('visual');
+  const svgHost=document.getElementById('svgHost'), loading=document.getElementById('loading');
+  let svgChunks=[], audioCtx=null, nextAudioTime=0, sources=new Set(), live=false;
+  const send=(senderId,type,extra={})=>{try{cast.framework.CastReceiverContext.getInstance().sendCustomMessage(NS,senderId,{type,...extra})}catch(_) {}};
+  const showVisual=(title)=>{dashboard.style.display='none';visual.style.display='grid';document.getElementById('visualTitle').textContent=title||'JARVIS // TECHNICAL VISUAL';};
+  const showDashboard=()=>{visual.style.display='none';dashboard.style.display='block';svgHost.replaceChildren();};
+  const hardStop=()=>{live=false;sources.forEach(s=>{try{s.stop(0)}catch(_){}});sources.clear();nextAudioTime=0;if(audioCtx){try{audioCtx.close()}catch(_){}audioCtx=null;}};
+  const beginAudio=(rate)=>{hardStop();audioCtx=new AudioContext({sampleRate:Number(rate)||24000,latencyHint:'interactive'});nextAudioTime=audioCtx.currentTime+.035;live=true;};
+  const playPcm=(b64)=>{if(!live||!audioCtx)return;const bin=atob(b64),count=bin.length>>1,buf=audioCtx.createBuffer(1,count,24000),out=buf.getChannelData(0);for(let i=0,j=0;i<count;i++,j+=2){let v=bin.charCodeAt(j)|(bin.charCodeAt(j+1)<<8);if(v&0x8000)v-=0x10000;out[i]=v/32768}const src=audioCtx.createBufferSource();src.buffer=buf;src.connect(audioCtx.destination);const at=Math.max(nextAudioTime,audioCtx.currentTime+.012);src.start(at);nextAudioTime=at+buf.duration;sources.add(src);src.onended=()=>sources.delete(src);};
+  const finishAudio=(senderId)=>{live=false;const remaining=Math.max(0,nextAudioTime-(audioCtx?audioCtx.currentTime:0));setTimeout(()=>send(senderId,'SPEAK_DONE'),remaining*1000+30);};
+  const safeSvg=(raw)=>{const doc=new DOMParser().parseFromString(raw,'image/svg+xml');if(doc.querySelector('parsererror'))return null;doc.querySelectorAll('script,foreignObject,image,use').forEach(n=>n.remove());doc.querySelectorAll('*').forEach(el=>[...el.attributes].forEach(a=>{if(/^on/i.test(a.name)||/href$/i.test(a.name))el.removeAttribute(a.name)}));return document.importNode(doc.documentElement,true);};
+  const context=cast.framework.CastReceiverContext.getInstance();
+  context.addCustomMessageListener(NS,e=>{const m=typeof e.data==='string'?JSON.parse(e.data):e.data||{};switch(m.type){
+    case 'LIVE_AUDIO_BEGIN':beginAudio(m.sample_rate);send(e.senderId,'SPEAK_STARTED');break;
+    case 'LIVE_AUDIO_CHUNK':playPcm(m.data);break;
+    case 'LIVE_AUDIO_END':finishAudio(e.senderId);break;
+    case 'LIVE_AUDIO_STOP':hardStop();send(e.senderId,'SPEAK_DONE',{interrupted:true});break;
+    case 'SHOW_VISUAL_LOADING':showVisual(m.title);loading.classList.remove('hidden');svgHost.replaceChildren();break;
+    case 'SHOW_SVG_BEGIN':showVisual(m.title);svgChunks=[];break;
+    case 'SHOW_SVG_CHUNK':svgChunks[Number(m.index)||0]=m.data||'';break;
+    case 'SHOW_SVG_END':{const node=safeSvg(svgChunks.join(''));if(node){svgHost.replaceChildren(node);loading.classList.add('hidden')}break;}
+    case 'HIDE_VISUAL':case 'SHOW_DASHBOARD':showDashboard();break;
+    case 'SHOW_STATE':document.getElementById('statusTitle').textContent=m.status||m.title||'JARVIS';document.getElementById('statusDetail').textContent=m.detail||'';break;
+    case 'SHOW_INFO':document.getElementById('statusTitle').textContent=m.title||'JARVIS';document.getElementById('statusDetail').textContent=m.text||m.detail||'';break;
+  }});
+  context.start({disableIdleTimeout:true});
+  setInterval(()=>document.getElementById('clock').textContent=new Date().toLocaleTimeString('de-DE')+' // EUROPE BERLIN',1000);
+})();
 </script>
 </body>
 </html>
