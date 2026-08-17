@@ -299,188 +299,110 @@
       margin-bottom: .7vh;
     }
   
-    /* ===== JARVIS CINEMATIC HUD ===== */
+    /* ===== JARVIS POINT CLOUD HUD ===== */
     .jarvis-hud {
       position: fixed;
       inset: 0;
-      pointer-events: none;
-      z-index: 30;
+      z-index: 9999;
       display: none;
       overflow: hidden;
       background:
-        radial-gradient(circle at 50% 48%, rgba(24,170,255,.10), transparent 26%),
-        radial-gradient(circle at 50% 48%, rgba(0,210,255,.04), transparent 48%);
+        radial-gradient(circle at 50% 46%, rgba(7,28,45,.96), rgba(2,8,14,.99) 52%, #02060a 100%);
+      color: #e4f8ff;
     }
+
     .jarvis-hud.visible { display: block; }
 
-    .hud-grid {
+    body.hud-active #app,
+    body.hud-active .app,
+    body.hud-active main,
+    body.hud-active header,
+    body.hud-active footer {
+      visibility: hidden !important;
+    }
+
+    #pointCloudCanvas {
       position: absolute;
       inset: 0;
-      opacity: .12;
-      background-image:
-        linear-gradient(rgba(80,200,255,.22) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(80,200,255,.22) 1px, transparent 1px);
-      background-size: 72px 72px;
-      mask-image: radial-gradient(circle, black 10%, transparent 76%);
+      width: 100vw;
+      height: 100vh;
     }
 
-    .hud-scanline {
+    .hud-vignette {
       position: absolute;
-      left: 0; right: 0;
-      height: 2px;
-      top: -5%;
-      background: linear-gradient(90deg, transparent, rgba(95,220,255,.8), transparent);
-      box-shadow: 0 0 18px rgba(64,190,255,.55);
-      opacity: .32;
-      animation: hudScan 5s linear infinite;
+      inset: 0;
+      background:
+        radial-gradient(circle at center, transparent 0 32%, rgba(0,0,0,.16) 58%, rgba(0,0,0,.78) 100%);
+      pointer-events: none;
     }
 
-    .hud-center {
+    .hud-scan {
       position: absolute;
-      left: 50%;
-      top: 45%;
-      width: 440px;
-      height: 440px;
-      transform: translate(-50%, -50%);
-    }
-
-    .hud-core, .hud-ring, .hud-ring2, .hud-ring3 {
-      position: absolute;
-      border-radius: 50%;
-      inset: 50%;
-      transform: translate(-50%, -50%);
-    }
-
-    .hud-core {
-      width: 112px;
-      height: 112px;
-      background: radial-gradient(circle,
-        rgba(230,252,255,.98) 0%,
-        rgba(74,206,255,.90) 18%,
-        rgba(21,139,219,.54) 42%,
-        rgba(0,55,105,.16) 64%,
-        transparent 72%);
-      box-shadow:
-        0 0 24px rgba(120,225,255,.85),
-        0 0 70px rgba(42,169,255,.55),
-        0 0 150px rgba(0,131,255,.25);
-      animation: coreIdle 2.4s ease-in-out infinite;
-    }
-
-    .hud-ring {
-      width: 220px; height: 220px;
-      border: 2px solid rgba(76,205,255,.62);
-      border-left-color: transparent;
-      border-right-color: rgba(76,205,255,.18);
-      box-shadow: inset 0 0 25px rgba(0,160,255,.12);
-      animation: spin 5.5s linear infinite;
-    }
-    .hud-ring2 {
-      width: 306px; height: 306px;
-      border: 1px dashed rgba(91,214,255,.38);
-      border-top-color: rgba(200,249,255,.88);
-      animation: spinReverse 9s linear infinite;
-    }
-    .hud-ring3 {
-      width: 390px; height: 390px;
-      border: 1px solid rgba(69,184,255,.18);
-      border-top: 3px solid rgba(110,221,255,.72);
-      border-bottom: 3px solid rgba(110,221,255,.34);
-      animation: spin 15s linear infinite;
-    }
-
-    .hud-ticks {
-      position: absolute;
-      inset: 13px;
-      border-radius: 50%;
-      background: repeating-conic-gradient(
-        from 0deg,
-        rgba(125,224,255,.65) 0deg 1deg,
-        transparent 1deg 8deg
+      inset: 0;
+      opacity: .10;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(110,220,255,.14) 0,
+        rgba(110,220,255,.14) 1px,
+        transparent 1px,
+        transparent 5px
       );
-      mask: radial-gradient(circle, transparent 67%, black 68% 70%, transparent 71%);
-      opacity: .40;
-      animation: spin 28s linear infinite;
+      pointer-events: none;
+    }
+
+    .hud-meta {
+      position: absolute;
+      top: 42px;
+      left: 52px;
+      font-size: 14px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      color: rgba(121,218,255,.56);
+    }
+
+    .hud-meta.right {
+      left: auto;
+      right: 52px;
+      text-align: right;
     }
 
     .hud-status-wrap {
       position: absolute;
       left: 50%;
-      top: calc(45% + 260px);
+      bottom: 76px;
       transform: translateX(-50%);
-      width: min(78vw, 1200px);
+      width: min(84vw, 1350px);
       text-align: center;
-      text-shadow: 0 0 18px rgba(60,200,255,.35);
     }
 
     .hud-status {
-      font-size: 32px;
+      font-size: 30px;
       font-weight: 600;
-      letter-spacing: .18em;
+      letter-spacing: .20em;
       text-transform: uppercase;
-      color: rgba(188,239,255,.96);
+      color: rgba(195,242,255,.98);
+      text-shadow: 0 0 18px rgba(70,200,255,.42);
     }
+
     .hud-detail {
-      margin-top: 18px;
-      font-size: 32px;
+      margin-top: 15px;
+      font-size: 30px;
       line-height: 1.35;
-      color: rgba(230,247,252,.88);
+      color: rgba(235,248,252,.90);
       max-height: 2.8em;
       overflow: hidden;
+      text-shadow: 0 0 14px rgba(50,180,255,.22);
     }
-    .hud-meta {
+
+    .hud-state-label {
       position: absolute;
-      top: 44px;
-      left: 56px;
-      color: rgba(122,214,255,.56);
-      letter-spacing: .22em;
-      font-size: 15px;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, 210px);
+      font-size: 12px;
+      letter-spacing: .28em;
       text-transform: uppercase;
-    }
-    .hud-meta.right {
-      left: auto;
-      right: 56px;
-      text-align: right;
-    }
-
-    .jarvis-hud[data-state="listening"] .hud-core {
-      animation: coreListen .72s ease-in-out infinite alternate;
-    }
-    .jarvis-hud[data-state="listening"] .hud-ring {
-      animation-duration: 2.2s;
-    }
-    .jarvis-hud[data-state="thinking"] .hud-ring {
-      animation-duration: .95s;
-    }
-    .jarvis-hud[data-state="thinking"] .hud-ring2 {
-      animation-duration: 1.8s;
-    }
-    .jarvis-hud[data-state="transcribing"] .hud-ring3 {
-      animation-duration: 4s;
-    }
-    .jarvis-hud[data-state="speaking"] .hud-core {
-      animation: coreSpeak .36s ease-in-out infinite alternate;
-    }
-    .jarvis-hud[data-state="understood"] .hud-core {
-      box-shadow:
-        0 0 30px rgba(160,240,255,.95),
-        0 0 90px rgba(50,200,255,.70);
-    }
-
-    @keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
-    @keyframes spinReverse { to { transform: translate(-50%, -50%) rotate(-360deg); } }
-    @keyframes hudScan { from { top: -5%; } to { top: 105%; } }
-    @keyframes coreIdle {
-      0%,100% { transform: translate(-50%, -50%) scale(.94); opacity: .80; }
-      50% { transform: translate(-50%, -50%) scale(1.06); opacity: 1; }
-    }
-    @keyframes coreListen {
-      from { transform: translate(-50%, -50%) scale(.88); filter: brightness(.85); }
-      to { transform: translate(-50%, -50%) scale(1.15); filter: brightness(1.22); }
-    }
-    @keyframes coreSpeak {
-      from { transform: translate(-50%, -50%) scale(.90); }
-      to { transform: translate(-50%, -50%) scale(1.12); }
+      color: rgba(100,207,255,.35);
     }
 
   </style>
@@ -754,7 +676,11 @@
       () => {
         setDebug('TTS beendet');
         sendSpeechEvent('SPEAK_DONE');
-        setHudState('active', 'Bereit', 'Du kannst direkt weitersprechen.');
+        setHudState(
+          'followup',
+          'Bereit',
+          'Du kannst direkt weitersprechen.'
+        );
 
         speechSenderId = null;
         speechChunks = [];
@@ -785,19 +711,163 @@
     );
 
 
+    const hudCanvas = document.getElementById('pointCloudCanvas');
+    const hudCtx = hudCanvas ? hudCanvas.getContext('2d') : null;
+    let hudState = 'standby';
+    let hudParticles = [];
+    let hudTime = 0;
+
+    function resizeHudCanvas() {
+      if (!hudCanvas || !hudCtx) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      hudCanvas.width = Math.floor(window.innerWidth * dpr);
+      hudCanvas.height = Math.floor(window.innerHeight * dpr);
+      hudCanvas.style.width = window.innerWidth + 'px';
+      hudCanvas.style.height = window.innerHeight + 'px';
+      hudCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function createPointCloud() {
+      hudParticles = [];
+      const count = 950;
+
+      for (let i = 0; i < count; i++) {
+        const u = Math.random();
+        const v = Math.random();
+        const theta = 2 * Math.PI * u;
+        const phi = Math.acos(2 * v - 1);
+        const radius = 145 + (Math.random() - .5) * 36;
+
+        hudParticles.push({
+          x: radius * Math.sin(phi) * Math.cos(theta),
+          y: radius * Math.sin(phi) * Math.sin(theta),
+          z: radius * Math.cos(phi),
+          seed: Math.random() * 1000,
+          size: .65 + Math.random() * 1.45
+        });
+      }
+    }
+
+    function hudParams() {
+      switch (hudState) {
+        case 'listening':
+          return { speed: .010, jitter: 4.2, pulse: 18, glow: 1.20 };
+        case 'transcribing':
+          return { speed: .016, jitter: 2.2, pulse: 10, glow: 1.10 };
+        case 'thinking':
+          return { speed: .032, jitter: 3.2, pulse: 14, glow: 1.38 };
+        case 'speaking':
+          return { speed: .019, jitter: 5.0, pulse: 28, glow: 1.52 };
+        case 'understood':
+          return { speed: .009, jitter: 1.2, pulse: 8, glow: 1.28 };
+        case 'followup':
+          return { speed: .008, jitter: 2.0, pulse: 11, glow: 1.10 };
+        default:
+          return { speed: .005, jitter: .7, pulse: 6, glow: .88 };
+      }
+    }
+
+    function drawPointCloud() {
+      if (!hudCtx || !hudCanvas) {
+        requestAnimationFrame(drawPointCloud);
+        return;
+      }
+
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      const cx = w / 2;
+      const cy = h * .45;
+      const p = hudParams();
+
+      hudTime += p.speed;
+      hudCtx.clearRect(0, 0, w, h);
+
+      const rotY = hudTime;
+      const rotX = Math.sin(hudTime * .42) * .32;
+      const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+      const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+      const pulse = Math.sin(hudTime * 4.3) * p.pulse;
+
+      const points = [];
+
+      for (const pt of hudParticles) {
+        const breathing = 1 + Math.sin(hudTime * 3.1 + pt.seed) * .018;
+        let x = pt.x * breathing;
+        let y = pt.y * breathing;
+        let z = pt.z * breathing;
+
+        const x1 = x * cosY - z * sinY;
+        const z1 = x * sinY + z * cosY;
+        const y1 = y * cosX - z1 * sinX;
+        const z2 = y * sinX + z1 * cosX;
+
+        const jitter = Math.sin(pt.seed + hudTime * 8.2) * p.jitter;
+        const scale = 440 / (440 + z2);
+
+        points.push({
+          x: cx + (x1 + jitter) * scale,
+          y: cy + (y1 + jitter * .42) * scale,
+          z: z2,
+          scale,
+          size: pt.size
+        });
+      }
+
+      points.sort((a, b) => a.z - b.z);
+
+      hudCtx.save();
+      hudCtx.globalCompositeOperation = 'lighter';
+
+      for (const q of points) {
+        const depth = Math.max(.12, Math.min(1, (q.z + 190) / 380));
+        const alpha = Math.min(.92, (.15 + depth * .62) * p.glow);
+        const radius = Math.max(.65, q.size * q.scale * (.72 + depth * .82));
+
+        hudCtx.beginPath();
+        hudCtx.fillStyle = `rgba(95, 218, 255, ${alpha})`;
+        hudCtx.shadowColor = 'rgba(50, 190, 255, .85)';
+        hudCtx.shadowBlur = 7 * p.glow;
+        hudCtx.arc(q.x, q.y, radius, 0, Math.PI * 2);
+        hudCtx.fill();
+      }
+
+      hudCtx.restore();
+
+      const halo = hudCtx.createRadialGradient(cx, cy, 20, cx, cy, 210 + pulse);
+      halo.addColorStop(0, 'rgba(115,225,255,.055)');
+      halo.addColorStop(.5, 'rgba(40,160,255,.025)');
+      halo.addColorStop(1, 'rgba(10,80,150,0)');
+      hudCtx.fillStyle = halo;
+      hudCtx.beginPath();
+      hudCtx.arc(cx, cy, 215 + pulse, 0, Math.PI * 2);
+      hudCtx.fill();
+
+      requestAnimationFrame(drawPointCloud);
+    }
+
     function setHudState(state, status, detail) {
       const hud = document.getElementById('jarvisHud');
       const statusEl = document.getElementById('hudStatus');
       const detailEl = document.getElementById('hudDetail');
+      const stateEl = document.getElementById('hudStateLabel');
+
       if (!hud || !statusEl || !detailEl) return;
 
+      document.body.classList.add('hud-active');
       hud.classList.add('visible');
-      hud.dataset.state = state || 'active';
+
+      hudState = state || 'active';
+      hud.dataset.state = hudState;
       statusEl.textContent = status || 'JARVIS';
       detailEl.textContent = detail || '';
+
+      if (stateEl) {
+        stateEl.textContent = String(hudState).toUpperCase() + ' // CORE ACTIVE';
+      }
     }
 
     function hideHud() {
+      document.body.classList.remove('hud-active');
       const hud = document.getElementById('jarvisHud');
       if (hud) hud.classList.remove('visible');
     }
@@ -805,11 +875,15 @@
     setInterval(() => {
       const el = document.getElementById('hudClock');
       if (!el) return;
-      const now = new Date();
       el.textContent =
-        now.toLocaleTimeString('de-DE', { hour12: false }) +
+        new Date().toLocaleTimeString('de-DE', { hour12: false }) +
         ' // SYSTEM ONLINE';
     }, 1000);
+
+    window.addEventListener('resize', resizeHudCanvas);
+    resizeHudCanvas();
+    createPointCloud();
+    requestAnimationFrame(drawPointCloud);
 
     function handleMessage(event) {
       let data = event.data;
@@ -828,10 +902,12 @@
 
       switch (data.type) {
         case 'SHOW_IDEAS':
+          hideHud();
           showIdeas(data);
           break;
 
         case 'SHOW_RECIPE':
+          hideHud();
           showRecipe(data);
           break;
 
@@ -911,17 +987,12 @@
   </script>
 
   <div id="jarvisHud" class="jarvis-hud" data-state="standby">
-    <div class="hud-grid"></div>
-    <div class="hud-scanline"></div>
+    <canvas id="pointCloudCanvas"></canvas>
+    <div class="hud-vignette"></div>
+    <div class="hud-scan"></div>
     <div class="hud-meta">JARVIS // NEURAL INTERFACE</div>
     <div class="hud-meta right" id="hudClock">SYSTEM ONLINE</div>
-    <div class="hud-center">
-      <div class="hud-ring3"></div>
-      <div class="hud-ring2"></div>
-      <div class="hud-ring"></div>
-      <div class="hud-ticks"></div>
-      <div class="hud-core"></div>
-    </div>
+    <div class="hud-state-label" id="hudStateLabel">CORE ONLINE</div>
     <div class="hud-status-wrap">
       <div id="hudStatus" class="hud-status">Bereit</div>
       <div id="hudDetail" class="hud-detail">Warte auf eine Anfrage.</div>
