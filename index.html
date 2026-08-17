@@ -1,1279 +1,320 @@
 <!doctype html>
 <html lang="de">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>JARVIS Receiver</title>
-
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>JARVIS</title>
   <script src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
-
   <style>
+    :root { color-scheme: dark; }
     * { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; background: #02050a; }
+    body { font-family: Arial, Helvetica, sans-serif; }
 
-    html, body {
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      overflow: hidden;
+    #scene {
+      position: fixed; inset: 0; overflow: hidden;
       background:
-        linear-gradient(rgba(70, 183, 231, .025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(70, 183, 231, .025) 1px, transparent 1px),
-        radial-gradient(circle at 50% 38%, rgba(36, 150, 205, .15), transparent 38%),
-        linear-gradient(180deg, #06111b 0%, #02070c 100%);
-      background-size: 4.5vw 4.5vw, 4.5vw 4.5vw, auto, auto;
-      color: #eaf8ff;
-      font-family: Arial, Helvetica, sans-serif;
+        radial-gradient(ellipse at 50% 48%, rgba(12,48,74,.28) 0%, rgba(4,14,25,.16) 34%, rgba(1,4,8,0) 65%),
+        radial-gradient(circle at 18% 24%, rgba(0,124,178,.10), transparent 30%),
+        radial-gradient(circle at 82% 74%, rgba(0,83,140,.08), transparent 32%),
+        linear-gradient(180deg, #050a11 0%, #02060b 50%, #010307 100%);
     }
 
-    body {
-      padding: 3.2vh 3.6vw 2.6vh;
-    }
-
-    .top {
-      height: 10vh;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      border-bottom: 1px solid rgba(111,211,255,.28);
-    }
-
-    .brand {
-      font-size: 2.2vw;
-      letter-spacing: .65vw;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
-    .online {
-      font-size: 1.05vw;
-      letter-spacing: .16vw;
-      color: #86dcff;
-      white-space: nowrap;
-    }
-
-    .dot {
-      display: inline-block;
-      width: .6vw;
-      height: .6vw;
-      border-radius: 50%;
-      background: #86dcff;
-      margin-right: .65vw;
-      box-shadow: 0 0 16px #86dcff;
-    }
-
-    main {
-      height: 82vh;
-      padding-top: 3.5vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
-      max-width: none;
-      margin: 0;
-    }
-
-    .eyebrow {
-      color: #78d4ff;
-      font-size: 1vw;
-      letter-spacing: .25vw;
-      text-transform: uppercase;
-      margin-bottom: 1.2vh;
-      flex: 0 0 auto;
-    }
-
-    h1 {
-      font-size: 3.3vw;
-      line-height: 1.08;
-      margin: 0 0 1.1vh;
-      font-weight: 500;
-      flex: 0 0 auto;
-    }
-
-    .subtitle {
-      font-size: 1.55vw;
-      line-height: 1.25;
-      color: #aac4d1;
-      margin-bottom: 2.5vh;
-      flex: 0 0 auto;
-    }
-
-    .hint {
-      margin-top: 1.7vh;
-      font-size: 1.05vw;
-      color: #78d4ff;
-      flex: 0 0 auto;
-    }
-
-    .grid {
-      flex: 1 1 auto;
-      min-height: 0;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      grid-template-rows: 1fr 1fr;
-      gap: 2.2vh 1.55vw;
-      margin-top: .4vh;
-    }
-
-    .card {
-      position: relative;
-      min-height: 0;
-      overflow: hidden;
-      border: 1px solid rgba(85, 209, 255, .42);
+    #scene::before {
+      content: ""; position: absolute; inset: -25%; pointer-events: none;
       background:
-        linear-gradient(135deg, rgba(15, 46, 67, .88), rgba(5, 18, 30, .76));
-      border-radius: 1.05vw;
-      padding: 1.7vh 1.55vw 1.45vh;
-      box-shadow:
-        inset 0 0 0 1px rgba(255,255,255,.025),
-        0 0 2.1vw rgba(26, 167, 224, .07);
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-start;
+        radial-gradient(ellipse at 35% 42%, rgba(80,180,230,.055), transparent 34%),
+        radial-gradient(ellipse at 68% 58%, rgba(20,120,190,.04), transparent 36%);
+      filter: blur(36px);
+      animation: haze 18s ease-in-out infinite alternate;
     }
 
-    .card::before {
-      content: "";
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: .22vw;
-      height: 100%;
-      background: linear-gradient(
-        180deg,
-        rgba(93, 222, 255, .95),
-        rgba(66, 132, 255, .28)
-      );
-      box-shadow: 0 0 1vw rgba(73, 211, 255, .48);
-    }
-
-    .card::after {
-      content: "";
-      position: absolute;
-      right: -4vw;
-      top: -7vh;
-      width: 13vw;
-      height: 13vw;
-      border: 1px solid rgba(94, 216, 255, .10);
-      border-radius: 50%;
-      box-shadow:
-        0 0 0 1.4vw rgba(75, 176, 227, .025),
-        0 0 0 3vw rgba(75, 176, 227, .018);
-      pointer-events: none;
-    }
-
-    .card-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: .7vh;
-      position: relative;
-      z-index: 1;
-    }
-
-    .num {
-      color: #82e3ff;
-      font-size: .88vw;
-      letter-spacing: .22vw;
-      font-weight: 700;
-    }
-
-    .card-meta {
-      display: flex;
-      gap: .45vw;
-      align-items: center;
-    }
-
-    .chip {
-      border: 1px solid rgba(102, 212, 255, .28);
-      background: rgba(70, 182, 232, .08);
-      color: #9edfff;
-      border-radius: 999px;
-      padding: .36vh .55vw;
-      font-size: .68vw;
-      letter-spacing: .045vw;
-      white-space: nowrap;
-    }
-
-    .card-title {
-      position: relative;
-      z-index: 1;
-      font-size: 1.72vw;
-      line-height: 1.04;
-      font-weight: 600;
-      margin: .15vh 0 .7vh;
-      color: #f4fbff;
-      max-width: 86%;
-    }
-
-    .desc {
-      position: relative;
-      z-index: 1;
-      font-size: .95vw;
-      line-height: 1.28;
-      color: #a9c7d6;
-      max-width: 94%;
-      min-height: 2.4em;
-      overflow: hidden;
-    }
-
-    .ingredients {
-      position: relative;
-      z-index: 1;
-      margin-top: auto;
-      padding-top: .75vh;
-      display: flex;
-      gap: .42vw;
-      flex-wrap: wrap;
-      border-top: 1px solid rgba(107, 207, 247, .11);
-    }
-
-    .ingredient {
-      color: #d7f4ff;
-      background: rgba(113, 211, 255, .055);
-      border-radius: .36vw;
-      padding: .34vh .45vw;
-      font-size: .72vw;
-      white-space: nowrap;
-    }
-
-    .text {
-      font-size: 1.4vw;
-      line-height: 1.45;
-      color: #c8dce6;
-      white-space: pre-wrap;
-      overflow: hidden;
-    }
-
-    .step {
-      border-left: 3px solid #75d8ff;
-      padding-left: 1.6vw;
-      margin-top: 1vh;
-    }
-
-    #jarvisAudio {
-      display: none;
-    }
-
-    #debug {
-      position: fixed;
-      right: 1.2vw;
-      bottom: .8vh;
-      font-size: .7vw;
-      color: rgba(135,220,255,.42);
-      pointer-events: none;
-    }
-
-    /* Rezeptansicht */
-    .recipe-layout {
-      flex: 1 1 auto;
-      min-height: 0;
-      display: grid;
-      grid-template-columns: .85fr 1.35fr;
-      gap: 2vw;
-    }
-
-    .recipe-panel {
-      min-height: 0;
-      overflow: hidden;
-      border: 1px solid rgba(111,211,255,.30);
-      background: rgba(11,35,50,.52);
-      border-radius: 1.1vw;
-      padding: 2.2vh 1.8vw;
-    }
-
-    .recipe-panel h2 {
-      margin: 0 0 1.4vh;
-      color: #78d4ff;
-      font-size: 1.5vw;
-      font-weight: 500;
-    }
-
-    .recipe-panel ul,
-    .recipe-panel ol {
-      margin: 0;
-      padding-left: 1.5vw;
-      font-size: 1.18vw;
-      line-height: 1.42;
-    }
-
-    .recipe-panel li {
-      margin-bottom: .7vh;
-    }
-  
-    /* ===== JARVIS POINT CLOUD HUD ===== */
-    .jarvis-hud {
-      position: fixed;
-      inset: 0;
-      z-index: 9999;
-      display: none;
-      overflow: hidden;
+    #scene::after {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
       background:
-        radial-gradient(circle at 50% 46%, rgba(7,28,45,.96), rgba(2,8,14,.99) 52%, #02060a 100%);
-      color: #e4f8ff;
+        linear-gradient(90deg, rgba(0,0,0,.58), transparent 18%, transparent 82%, rgba(0,0,0,.58)),
+        linear-gradient(180deg, rgba(0,0,0,.38), transparent 19%, transparent 80%, rgba(0,0,0,.52));
+      box-shadow: inset 0 0 180px rgba(0,0,0,.92);
     }
 
-    .jarvis-hud.visible { display: block; }
+    @keyframes haze { from { transform: translate3d(-1.5%, -1%, 0) scale(1); } to { transform: translate3d(1.5%, 1%, 0) scale(1.06); } }
 
-    body.hud-active #app,
-    body.hud-active .app,
-    body.hud-active main,
-    body.hud-active header,
-    body.hud-active footer {
-      visibility: hidden !important;
+    #stars, #cloud, #glow { position: absolute; inset: 0; width: 100%; height: 100%; }
+    #stars { opacity: .52; }
+    #glow { filter: blur(18px); opacity: .55; }
+    #cloud { filter: drop-shadow(0 0 7px rgba(68,190,255,.42)); }
+
+    .ambient-line {
+      position: absolute; left: 50%; top: 50%; width: 46vw; height: 1px;
+      transform: translate(-50%,-50%);
+      background: linear-gradient(90deg, transparent, rgba(61,180,239,.06), rgba(112,214,255,.13), rgba(61,180,239,.06), transparent);
+      opacity: .45;
     }
 
-    #pointCloudCanvas {
-      position: absolute;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
-    }
-
-    .hud-vignette {
-      position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(circle at center, transparent 0 32%, rgba(0,0,0,.16) 58%, rgba(0,0,0,.78) 100%);
-      pointer-events: none;
-    }
-
-    .hud-scan {
-      position: absolute;
-      inset: 0;
-      opacity: .10;
-      background: repeating-linear-gradient(
-        to bottom,
-        rgba(110,220,255,.14) 0,
-        rgba(110,220,255,.14) 1px,
-        transparent 1px,
-        transparent 5px
-      );
-      pointer-events: none;
-    }
-
-    .hud-meta {
-      position: absolute;
-      top: 42px;
-      left: 52px;
-      font-size: 14px;
-      letter-spacing: .22em;
-      text-transform: uppercase;
-      color: rgba(121,218,255,.56);
-    }
-
-    .hud-meta.right {
-      left: auto;
-      right: 52px;
-      text-align: right;
-    }
-
-    .hud-status-wrap {
-      position: absolute;
-      left: 50%;
-      bottom: 76px;
-      transform: translateX(-50%);
-      width: min(84vw, 1350px);
-      text-align: center;
-    }
-
-    .hud-status {
-      font-size: 30px;
-      font-weight: 600;
-      letter-spacing: .20em;
-      text-transform: uppercase;
-      color: rgba(195,242,255,.98);
-      text-shadow: 0 0 18px rgba(70,200,255,.42);
-    }
-
-    .hud-detail {
-      margin-top: 15px;
-      font-size: 30px;
-      line-height: 1.35;
-      color: rgba(235,248,252,.90);
-      max-height: 2.8em;
-      overflow: hidden;
-      text-shadow: 0 0 14px rgba(50,180,255,.22);
-    }
-
-    .hud-state-label {
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, 210px);
-      font-size: 12px;
-      letter-spacing: .28em;
-      text-transform: uppercase;
-      color: rgba(100,207,255,.35);
-    }
-
-  
-    /* ===== TECHNICAL DIAGRAM MODE ===== */
-    #diagramPanel {
-      position: fixed;
-      left: 3.5vw;
-      top: 12vh;
-      width: 68vw;
-      height: 68vh;
-      z-index: 10002;
-      display: none;
-      border-left: 1px solid rgba(75,205,255,.42);
-      border-bottom: 1px solid rgba(75,205,255,.20);
-      background:
-        linear-gradient(90deg, rgba(3,17,28,.62), rgba(3,14,24,.18));
-      box-shadow: inset 22px 0 55px rgba(0,125,190,.045);
-      overflow: hidden;
-    }
-
-    #diagramPanel.visible { display: block; }
-
-    .diagram-head {
-      height: 64px;
-      display: flex;
-      align-items: center;
-      padding: 0 26px;
-      font-size: 16px;
-      letter-spacing: .23em;
-      color: rgba(145,226,255,.80);
-      text-transform: uppercase;
-      border-bottom: 1px solid rgba(78,204,255,.17);
-    }
-
-    #diagramCanvas {
-      width: 100%;
-      height: calc(100% - 64px);
-    }
-
-    .jarvis-hud.diagram-mode .hud-status-wrap {
-      width: 66vw;
-      left: 37vw;
-      bottom: 3.8vh;
-    }
-
-    .jarvis-hud.diagram-mode .hud-detail {
-      font-size: 23px;
-    }
-
+    #debug { display: none; }
+    #jarvisAudio { display: none; }
   </style>
 </head>
-
 <body>
+  <div id="scene">
+    <canvas id="stars"></canvas>
+    <canvas id="glow"></canvas>
+    <div class="ambient-line"></div>
+    <canvas id="cloud"></canvas>
+  </div>
+  <div id="debug"></div>
   <audio id="jarvisAudio" preload="auto"></audio>
-  <header class="top">
-    <div class="brand">JARVIS</div>
-    <div class="online"><span class="dot"></span>SYSTEM ONLINE</div>
-  </header>
-
-  <main id="main">
-    <div class="eyebrow">ASSISTENT</div>
-    <h1>Bereit.</h1>
-    <div class="subtitle">Warte auf eine Anfrage.</div>
-    <div class="hint">ONLINE</div>
-  </main>
-
-  <div id="debug">Receiver gestartet</div>
 
   <script>
     const NAMESPACE = 'urn:x-cast:com.jarvis.receiver';
     const context = cast.framework.CastReceiverContext.getInstance();
-    const main = document.getElementById('main');
-    const debug = document.getElementById('debug');
-
-    function esc(value) {
-      return String(value ?? '')
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
-    }
-
-    function setDebug(text) {
-      debug.textContent = text;
-      console.log('[JARVIS]', text);
-    }
-
-    function showStandby(data = {}) {
-      main.innerHTML = `
-        <div class="eyebrow">${esc(data.eyebrow || 'ASSISTENT')}</div>
-        <h1>${esc(data.title || 'Bereit.')}</h1>
-        <div class="subtitle">${esc(data.subtitle || 'Warte auf eine Anfrage.')}</div>
-        <div class="hint">${esc(data.hint || 'ONLINE')}</div>
-      `;
-    }
-
-    function showIdeas(data) {
-      const items = Array.isArray(data.items) ? data.items.slice(0, 4) : [];
-
-      main.innerHTML = `
-        <div class="eyebrow">CULINARY // OPTIONS</div>
-        <h1>${esc(data.title || 'Was möchtest du kochen?')}</h1>
-        <div class="subtitle">${esc(data.subtitle || '')}</div>
-
-        <div class="grid">
-          ${items.map((item, i) => {
-            const ingredients = Array.isArray(item.ingredients)
-              ? item.ingredients.slice(0, 3)
-              : [];
-
-            return `
-              <div class="card">
-                <div class="card-head">
-                  <div class="num">OPTION 0${i + 1}</div>
-                  <div class="card-meta">
-                    ${item.duration ? `<span class="chip">${esc(item.duration)}</span>` : ''}
-                    ${item.difficulty ? `<span class="chip">${esc(item.difficulty)}</span>` : ''}
-                  </div>
-                </div>
-
-                <div class="card-title">${esc(item.title || item.titel || '')}</div>
-                <div class="desc">${esc(item.description || item.beschreibung || '')}</div>
-
-                ${ingredients.length ? `
-                  <div class="ingredients">
-                    ${ingredients.map(x => `<span class="ingredient">${esc(x)}</span>`).join('')}
-                  </div>
-                ` : ''}
-              </div>
-            `;
-          }).join('')}
-        </div>
-
-        <div class="hint">${esc(data.hint || 'Sag einfach die Nummer.')}</div>
-      `;
-    }
-
-    function showRecipe(data) {
-      const ingredients = Array.isArray(data.ingredients)
-        ? data.ingredients
-        : (Array.isArray(data.zutaten) ? data.zutaten : []);
-
-      const steps = Array.isArray(data.steps)
-        ? data.steps
-        : (Array.isArray(data.schritte) ? data.schritte : []);
-
-      if (ingredients.length || steps.length) {
-        main.innerHTML = `
-          <div class="eyebrow">REZEPT</div>
-          <h1>${esc(data.title || data.titel || 'Rezept')}</h1>
-          <div class="subtitle">${esc(data.subtitle || '')}</div>
-
-          <div class="recipe-layout">
-            <section class="recipe-panel">
-              <h2>Zutaten</h2>
-              <ul>
-                ${ingredients.map(x => `<li>${esc(x)}</li>`).join('')}
-              </ul>
-            </section>
-
-            <section class="recipe-panel">
-              <h2>Zubereitung</h2>
-              <ol>
-                ${steps.map(x => `<li>${esc(x)}</li>`).join('')}
-              </ol>
-            </section>
-          </div>
-
-          <div class="hint">${esc(data.hint || 'Sag „nächster Schritt“ zum Fortfahren.')}</div>
-        `;
-      } else {
-        main.innerHTML = `
-          <div class="eyebrow">REZEPT</div>
-          <h1>${esc(data.title || 'Rezept')}</h1>
-          <div class="subtitle">${esc(data.subtitle || '')}</div>
-          <div class="text">${esc(data.text || data.content || '')}</div>
-          <div class="hint">${esc(data.hint || 'Sag „nächster Schritt“ zum Fortfahren.')}</div>
-        `;
-      }
-    }
-
-    function showStep(data) {
-      main.innerHTML = `
-        <div class="eyebrow">SCHRITT ${esc(data.step || '')}</div>
-        <h1>${esc(data.title || 'Zubereitung')}</h1>
-        <div class="step">
-          <div class="text">${esc(data.text || data.content || '')}</div>
-        </div>
-        <div class="hint">${esc(data.hint || 'Sag „weiter“, wenn du bereit bist.')}</div>
-      `;
-    }
-
-    function showInfo(data) {
-      main.innerHTML = `
-        <div class="eyebrow">${esc(data.eyebrow || 'INFORMATION')}</div>
-        <h1>${esc(data.title || 'JARVIS')}</h1>
-        <div class="text">${esc(data.text || data.content || '')}</div>
-        <div class="hint">${esc(data.hint || '')}</div>
-      `;
-    }
-
+    const cloudCanvas = document.getElementById('cloud');
+    const glowCanvas = document.getElementById('glow');
+    const starsCanvas = document.getElementById('stars');
+    const cloudCtx = cloudCanvas.getContext('2d');
+    const glowCtx = glowCanvas.getContext('2d');
+    const starsCtx = starsCanvas.getContext('2d');
     const jarvisAudio = document.getElementById('jarvisAudio');
 
-    let speechSenderId = null;
-    let speechChunks = [];
-    let speechExpectedChunks = 0;
-    let speechMime = 'audio/mpeg';
-    let speechObjectUrl = null;
+    let W = 1920, H = 1080, DPR = 1;
+    let state = 'standby';
+    let stateChanged = performance.now();
+    let particles = [];
+    let stars = [];
+    let audioLevel = 0;
+    let smoothedAudio = 0;
+    let audioContext = null;
+    let analyser = null;
+    let mediaSource = null;
+    let analyserData = null;
 
-    function sendSpeechEvent(type, extra = {}) {
-      if (!speechSenderId) return;
+    const STATE = {
+      standby:      { speed:.00010, pulse:.020, spread:1.00, energy:.72, wobble:.16 },
+      active:       { speed:.00018, pulse:.050, spread:1.02, energy:.94, wobble:.26 },
+      listening:    { speed:.00023, pulse:.080, spread:1.04, energy:1.08, wobble:.34 },
+      transcribing: { speed:.00034, pulse:.065, spread:.99, energy:1.03, wobble:.48 },
+      understood:   { speed:.00028, pulse:.070, spread:1.00, energy:1.06, wobble:.38 },
+      thinking:     { speed:.00053, pulse:.105, spread:.94, energy:1.20, wobble:.72 },
+      speaking:     { speed:.00027, pulse:.135, spread:1.02, energy:1.30, wobble:.42 },
+      followup:     { speed:.00015, pulse:.035, spread:1.01, energy:.88, wobble:.20 }
+    };
 
-      try {
-        context.sendCustomMessage(
-          NAMESPACE,
-          speechSenderId,
-          Object.assign(
-            { type },
-            extra
-          )
-        );
-      } catch (err) {
-        console.warn(
-          'JARVIS Speech Event konnte nicht gesendet werden:',
-          err
-        );
+    function setState(next) {
+      state = STATE[next] ? next : 'active';
+      stateChanged = performance.now();
+    }
+
+    function resize() {
+      DPR = Math.min(window.devicePixelRatio || 1, 1.5);
+      W = window.innerWidth; H = window.innerHeight;
+      for (const c of [cloudCanvas, glowCanvas, starsCanvas]) {
+        c.width = Math.floor(W * DPR); c.height = Math.floor(H * DPR);
+        c.style.width = W + 'px'; c.style.height = H + 'px';
+      }
+      cloudCtx.setTransform(DPR,0,0,DPR,0,0);
+      glowCtx.setTransform(DPR,0,0,DPR,0,0);
+      starsCtx.setTransform(DPR,0,0,DPR,0,0);
+      makeStars();
+    }
+
+    function makeStars() {
+      const count = Math.max(70, Math.floor(W * H / 18000));
+      stars = Array.from({length:count}, () => ({
+        x: Math.random()*W, y: Math.random()*H,
+        r: Math.random()*1.25+.15, a: Math.random()*.28+.04,
+        tw: Math.random()*Math.PI*2
+      }));
+      starsCtx.clearRect(0,0,W,H);
+      for (const s of stars) {
+        starsCtx.beginPath();
+        starsCtx.fillStyle = `rgba(92,180,226,${s.a})`;
+        starsCtx.arc(s.x,s.y,s.r,0,Math.PI*2); starsCtx.fill();
       }
     }
 
-    function speechBegin(senderId, data) {
-      speechSenderId = senderId;
-      speechExpectedChunks = Number(data.chunks || 0);
-      speechMime = data.mime || 'audio/mpeg';
-      speechChunks = new Array(speechExpectedChunks);
-
-      setDebug(
-        'TTS empfangen: 0/' + speechExpectedChunks
-      );
-    }
-
-    function speechChunk(data) {
-      const index = Number(data.index);
-
-      if (
-        Number.isInteger(index) &&
-        index >= 0 &&
-        index < speechChunks.length
-      ) {
-        speechChunks[index] = data.data || '';
-      }
-    }
-
-    async function speechEnd() {
-      try {
-        if (
-          !speechExpectedChunks ||
-          speechChunks.some(chunk => typeof chunk !== 'string')
-        ) {
-          throw new Error(
-            'TTS-Chunks unvollstaendig.'
-          );
-        }
-
-        const base64 = speechChunks.join('');
-        const binary = atob(base64);
-        const bytes = new Uint8Array(binary.length);
-
-        for (let i = 0; i < binary.length; i++) {
-          bytes[i] = binary.charCodeAt(i);
-        }
-
-        if (speechObjectUrl) {
-          URL.revokeObjectURL(speechObjectUrl);
-        }
-
-        const blob = new Blob(
-          [bytes],
-          { type: speechMime }
-        );
-
-        speechObjectUrl = URL.createObjectURL(blob);
-
-        jarvisAudio.src = speechObjectUrl;
-        jarvisAudio.currentTime = 0;
-
-        setDebug('TTS wird abgespielt');
-
-        await jarvisAudio.play();
-
-      } catch (err) {
-        console.error(
-          'JARVIS Audio Error:',
-          err
-        );
-
-        sendSpeechEvent(
-          'SPEAK_ERROR',
-          { error: String(err) }
-        );
-
-        speechSenderId = null;
-        speechChunks = [];
-        speechExpectedChunks = 0;
-      }
-    }
-
-    jarvisAudio.addEventListener(
-      'playing',
-      () => {
-        setDebug('TTS spielt');
-        sendSpeechEvent('SPEAK_STARTED');
-      }
-    );
-
-    jarvisAudio.addEventListener(
-      'ended',
-      () => {
-        setDebug('TTS beendet');
-        sendSpeechEvent('SPEAK_DONE');
-        setHudState(
-          'followup',
-          'Bereit',
-          'Du kannst direkt weitersprechen.'
-        );
-
-        speechSenderId = null;
-        speechChunks = [];
-        speechExpectedChunks = 0;
-      }
-    );
-
-    jarvisAudio.addEventListener(
-      'error',
-      () => {
-        const code =
-          jarvisAudio.error?.code ??
-          'unbekannt';
-
-        sendSpeechEvent(
-          'SPEAK_ERROR',
-          {
-            error:
-              'HTMLAudioElement Fehlercode ' +
-              String(code)
-          }
-        );
-
-        speechSenderId = null;
-        speechChunks = [];
-        speechExpectedChunks = 0;
-      }
-    );
-
-
-
-    const diagramPanel = document.getElementById('diagramPanel');
-    const diagramCanvas = document.getElementById('diagramCanvas');
-    const diagramCtx = diagramCanvas ? diagramCanvas.getContext('2d') : null;
-    let diagramActive = false;
-    let currentDiagram = null;
-
-    const hudCanvas = document.getElementById('pointCloudCanvas');
-    const hudCtx = hudCanvas ? hudCanvas.getContext('2d') : null;
-    let hudState = 'standby';
-    let hudParticles = [];
-    let hudTime = 0;
-
-    function resizeHudCanvas() {
-      if (!hudCanvas || !hudCtx) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      hudCanvas.width = Math.floor(window.innerWidth * dpr);
-      hudCanvas.height = Math.floor(window.innerHeight * dpr);
-      hudCanvas.style.width = window.innerWidth + 'px';
-      hudCanvas.style.height = window.innerHeight + 'px';
-      hudCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    }
-
+    // Eine unregelmaessige, organische 3D-Punktwolke — absichtlich keine perfekte Kugel.
     function createPointCloud() {
-      hudParticles = [];
-      const count = 950;
+      const count = 1850;
+      particles = [];
+      const golden = Math.PI * (3 - Math.sqrt(5));
+      for (let i=0; i<count; i++) {
+        const y = 1 - (i/(count-1))*2;
+        const radius = Math.sqrt(Math.max(0,1-y*y));
+        const theta = golden*i + (Math.random()-.5)*.12;
+        let x = Math.cos(theta)*radius;
+        let z = Math.sin(theta)*radius;
 
-      for (let i = 0; i < count; i++) {
-        const u = Math.random();
-        const v = Math.random();
-        const theta = 2 * Math.PI * u;
-        const phi = Math.acos(2 * v - 1);
-        const radius = 145 + (Math.random() - .5) * 36;
+        // organische Verformung, damit es eher wie ein holografischer Kern wirkt
+        const n1 = 1 + .10*Math.sin(theta*3 + y*5) + .045*Math.sin(theta*8-y*3);
+        x *= n1 * (1.03 + .05*Math.sin(y*7));
+        z *= n1 * (.88 + .05*Math.cos(y*6));
+        const yy = y * (1.07 + .05*Math.sin(theta*4));
 
-        hudParticles.push({
-          x: radius * Math.sin(phi) * Math.cos(theta),
-          y: radius * Math.sin(phi) * Math.sin(theta),
-          z: radius * Math.cos(phi),
-          seed: Math.random() * 1000,
-          size: .65 + Math.random() * 1.45
+        particles.push({
+          x, y:yy, z,
+          seed: Math.random()*Math.PI*2,
+          size: .58 + Math.random()*1.45,
+          alpha: .34 + Math.random()*.66,
+          drift: .002 + Math.random()*.009
         });
       }
     }
 
-    function hudParams() {
-      switch (hudState) {
-        case 'listening':
-          return { speed: .010, jitter: 4.2, pulse: 18, glow: 1.20 };
-        case 'transcribing':
-          return { speed: .016, jitter: 2.2, pulse: 10, glow: 1.10 };
-        case 'thinking':
-          return { speed: .032, jitter: 3.2, pulse: 14, glow: 1.38 };
-        case 'speaking':
-          return { speed: .019, jitter: 5.0, pulse: 28, glow: 1.52 };
-        case 'understood':
-          return { speed: .009, jitter: 1.2, pulse: 8, glow: 1.28 };
-        case 'followup':
-          return { speed: .008, jitter: 2.0, pulse: 11, glow: 1.10 };
-        default:
-          return { speed: .005, jitter: .7, pulse: 6, glow: .88 };
-      }
-    }
-
-    function drawPointCloud() {
-      if (!hudCtx || !hudCanvas) {
-        requestAnimationFrame(drawPointCloud);
-        return;
-      }
-
-      const w = window.innerWidth;
-      const h = window.innerHeight;
-      const cx = diagramActive ? w * .865 : w / 2;
-      const cy = diagramActive ? h * .205 : h * .45;
-      const p = hudParams();
-
-      hudTime += p.speed;
-      hudCtx.clearRect(0, 0, w, h);
-
-      const rotY = hudTime;
-      const rotX = Math.sin(hudTime * .42) * .32;
-      const cosY = Math.cos(rotY), sinY = Math.sin(rotY);
-      const cosX = Math.cos(rotX), sinX = Math.sin(rotX);
-      const pulse = Math.sin(hudTime * 4.3) * p.pulse;
-
-      const points = [];
-
-      for (const pt of hudParticles) {
-        const breathing = 1 + Math.sin(hudTime * 3.1 + pt.seed) * .018;
-        let x = pt.x * breathing;
-        let y = pt.y * breathing;
-        let z = pt.z * breathing;
-
-        const x1 = x * cosY - z * sinY;
-        const z1 = x * sinY + z * cosY;
-        const y1 = y * cosX - z1 * sinX;
-        const z2 = y * sinX + z1 * cosX;
-
-        const jitter = Math.sin(pt.seed + hudTime * 8.2) * p.jitter;
-        const projection = diagramActive ? 245 : 440;
-        const scale = projection / (440 + z2);
-
-        points.push({
-          x: cx + (x1 + jitter) * scale,
-          y: cy + (y1 + jitter * .42) * scale,
-          z: z2,
-          scale,
-          size: pt.size
-        });
-      }
-
-      points.sort((a, b) => a.z - b.z);
-
-      hudCtx.save();
-      hudCtx.globalCompositeOperation = 'lighter';
-
-      for (const q of points) {
-        const depth = Math.max(.12, Math.min(1, (q.z + 190) / 380));
-        const alpha = Math.min(.92, (.15 + depth * .62) * p.glow);
-        const radius = Math.max(.65, q.size * q.scale * (.72 + depth * .82));
-
-        hudCtx.beginPath();
-        hudCtx.fillStyle = `rgba(95, 218, 255, ${alpha})`;
-        hudCtx.shadowColor = 'rgba(50, 190, 255, .85)';
-        hudCtx.shadowBlur = 7 * p.glow;
-        hudCtx.arc(q.x, q.y, radius, 0, Math.PI * 2);
-        hudCtx.fill();
-      }
-
-      hudCtx.restore();
-
-      const halo = hudCtx.createRadialGradient(cx, cy, 20, cx, cy, 210 + pulse);
-      halo.addColorStop(0, 'rgba(115,225,255,.055)');
-      halo.addColorStop(.5, 'rgba(40,160,255,.025)');
-      halo.addColorStop(1, 'rgba(10,80,150,0)');
-      hudCtx.fillStyle = halo;
-      hudCtx.beginPath();
-      hudCtx.arc(cx, cy, 215 + pulse, 0, Math.PI * 2);
-      hudCtx.fill();
-
-      requestAnimationFrame(drawPointCloud);
-    }
-
-
-    function resizeDiagramCanvas() {
-      if (!diagramCanvas || !diagramCtx || !diagramPanel) return;
-      const rect = diagramCanvas.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      diagramCanvas.width = Math.max(1, Math.floor(rect.width * dpr));
-      diagramCanvas.height = Math.max(1, Math.floor(rect.height * dpr));
-      diagramCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      if (currentDiagram) drawTechnicalDiagram(currentDiagram);
-    }
-
-    function roundedRect(ctx, x, y, w, h, r) {
-      ctx.beginPath();
-      ctx.roundRect(x, y, w, h, r);
-    }
-
-    function drawArrow(ctx, x1, y1, x2, y2) {
-      const a = Math.atan2(y2 - y1, x2 - x1);
-      const head = 12;
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(x2, y2);
-      ctx.lineTo(
-        x2 - head * Math.cos(a - Math.PI / 6),
-        y2 - head * Math.sin(a - Math.PI / 6)
-      );
-      ctx.lineTo(
-        x2 - head * Math.cos(a + Math.PI / 6),
-        y2 - head * Math.sin(a + Math.PI / 6)
-      );
-      ctx.closePath();
-      ctx.fill();
-    }
-
-    function drawNode(ctx, x, y, w, h, node, index) {
-      const glow = ctx.createLinearGradient(x, y, x + w, y + h);
-      glow.addColorStop(0, 'rgba(18,80,112,.38)');
-      glow.addColorStop(1, 'rgba(5,35,58,.24)');
-
-      ctx.shadowColor = 'rgba(48,190,255,.28)';
-      ctx.shadowBlur = 18;
-      ctx.fillStyle = glow;
-      roundedRect(ctx, x, y, w, h, 10);
-      ctx.fill();
-
-      ctx.shadowBlur = 0;
-      ctx.strokeStyle = 'rgba(103,216,255,.62)';
-      ctx.lineWidth = 1.2;
-      roundedRect(ctx, x, y, w, h, 10);
-      ctx.stroke();
-
-      ctx.fillStyle = 'rgba(105,220,255,.68)';
-      ctx.font = '12px Arial';
-      ctx.fillText(String(index + 1).padStart(2, '0'), x + 14, y + 19);
-
-      ctx.fillStyle = 'rgba(225,248,255,.96)';
-      ctx.font = '600 18px Arial';
-      ctx.fillText(node.label || '', x + 14, y + 47);
-
-      ctx.fillStyle = 'rgba(158,211,229,.74)';
-      ctx.font = '13px Arial';
-      const sub = node.sub || '';
-      ctx.fillText(sub.slice(0, 34), x + 14, y + 69);
-    }
-
-    function drawTechnicalDiagram(diagram) {
-      if (!diagramCtx || !diagramCanvas) return;
-
-      const rect = diagramCanvas.getBoundingClientRect();
-      const w = rect.width;
-      const h = rect.height;
-      const ctx = diagramCtx;
-      ctx.clearRect(0, 0, w, h);
-
-      // faint construction grid
-      ctx.save();
-      ctx.strokeStyle = 'rgba(74,181,225,.07)';
-      ctx.lineWidth = 1;
-      for (let x = 20; x < w; x += 48) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
-      }
-      for (let y = 20; y < h; y += 48) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-      }
-      ctx.restore();
-
-      const nodes = diagram.nodes || [];
-      if (!nodes.length) return;
-
-      ctx.strokeStyle = 'rgba(87,210,255,.58)';
-      ctx.fillStyle = 'rgba(87,210,255,.75)';
-      ctx.lineWidth = 2;
-
-      if (diagram.kind === 'cycle') {
-        const cx = w * .50;
-        const cy = h * .50;
-        const rx = Math.min(w * .34, 360);
-        const ry = Math.min(h * .32, 205);
-        const nodeW = Math.min(190, w * .22);
-        const nodeH = 84;
-        const pos = [];
-
-        nodes.forEach((node, i) => {
-          const angle = -Math.PI / 2 + i * (2 * Math.PI / nodes.length);
-          pos.push({
-            x: cx + Math.cos(angle) * rx - nodeW / 2,
-            y: cy + Math.sin(angle) * ry - nodeH / 2
-          });
-        });
-
-        for (let i = 0; i < pos.length; i++) {
-          const a = pos[i];
-          const b = pos[(i + 1) % pos.length];
-          drawArrow(
-            ctx,
-            a.x + nodeW / 2,
-            a.y + nodeH / 2,
-            b.x + nodeW / 2,
-            b.y + nodeH / 2
-          );
+    function ensureAnalyser() {
+      try {
+        if (!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        if (!mediaSource) {
+          analyser = audioContext.createAnalyser();
+          analyser.fftSize = 256;
+          analyser.smoothingTimeConstant = .82;
+          analyserData = new Uint8Array(analyser.frequencyBinCount);
+          mediaSource = audioContext.createMediaElementSource(jarvisAudio);
+          mediaSource.connect(analyser);
+          analyser.connect(audioContext.destination);
         }
+        if (audioContext.state === 'suspended') audioContext.resume();
+      } catch (e) { console.warn('Audio analyser:', e); }
+    }
 
-        pos.forEach((p, i) => drawNode(ctx, p.x, p.y, nodeW, nodeH, nodes[i], i));
+    function readAudio() {
+      if (!analyser || !analyserData || jarvisAudio.paused) { audioLevel *= .88; return; }
+      analyser.getByteFrequencyData(analyserData);
+      let sum=0, n=Math.min(58, analyserData.length);
+      for(let i=2;i<n;i++) sum += analyserData[i];
+      audioLevel = Math.min(1, (sum/Math.max(1,n-2))/128);
+    }
 
-        ctx.fillStyle = 'rgba(90,213,255,.16)';
-        ctx.beginPath();
-        ctx.arc(cx, cy, 65, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(110,225,255,.26)';
-        ctx.stroke();
-        ctx.fillStyle = 'rgba(164,235,255,.66)';
-        ctx.font = '12px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('ENERGY LOOP', cx, cy + 4);
-        ctx.textAlign = 'start';
-      } else {
-        const margin = 34;
-        const gap = 22;
-        const available = w - margin * 2;
-        const nodeW = Math.min(185, (available - gap * (nodes.length - 1)) / nodes.length);
-        const nodeH = 100;
-        const y = h * .47 - nodeH / 2;
-        const positions = [];
+    function rotatePoint(p, ay, ax) {
+      let x=p.x, y=p.y, z=p.z;
+      let c=Math.cos(ay), s=Math.sin(ay);
+      let x1=x*c-z*s, z1=x*s+z*c;
+      c=Math.cos(ax); s=Math.sin(ax);
+      let y1=y*c-z1*s, z2=y*s+z1*c;
+      return [x1,y1,z2];
+    }
 
-        nodes.forEach((node, i) => {
-          const x = margin + i * (nodeW + gap);
-          positions.push({x, y});
-        });
+    function draw(t) {
+      readAudio();
+      smoothedAudio += (audioLevel-smoothedAudio)*.16;
+      const cfg = STATE[state] || STATE.active;
+      const elapsed = t - stateChanged;
+      const settle = Math.min(1, elapsed/600);
+      const speakingBoost = state==='speaking' ? smoothedAudio : 0;
+      const pulse = 1 + cfg.pulse*Math.sin(t*.0021) + speakingBoost*.18;
+      const spread = cfg.spread*pulse;
+      const centerX=W*.50, centerY=H*.50;
+      const baseR=Math.min(W,H)*.255;
+      const yaw=t*cfg.speed;
+      const pitch=.20*Math.sin(t*.00013) + .055*Math.sin(t*.00051);
 
-        for (let i = 0; i < positions.length - 1; i++) {
-          drawArrow(
-            ctx,
-            positions[i].x + nodeW,
-            y + nodeH / 2,
-            positions[i + 1].x,
-            y + nodeH / 2
-          );
-        }
+      cloudCtx.clearRect(0,0,W,H);
+      glowCtx.clearRect(0,0,W,H);
 
-        positions.forEach((p, i) => drawNode(ctx, p.x, p.y, nodeW, nodeH, nodes[i], i));
+      // ruhiger Kern-Glow
+      const gr = glowCtx.createRadialGradient(centerX,centerY,0,centerX,centerY,baseR*1.38);
+      const glowA = .075*cfg.energy + speakingBoost*.05;
+      gr.addColorStop(0,`rgba(48,183,255,${glowA})`);
+      gr.addColorStop(.38,`rgba(13,104,170,${glowA*.55})`);
+      gr.addColorStop(1,'rgba(0,15,30,0)');
+      glowCtx.fillStyle=gr; glowCtx.fillRect(centerX-baseR*1.5,centerY-baseR*1.5,baseR*3,baseR*3);
+
+      const projected=[];
+      for (let i=0;i<particles.length;i++) {
+        const p=particles[i];
+        const localWave = cfg.wobble*.032*Math.sin(t*.00125 + p.seed + p.y*5);
+        const restless = state==='thinking' ? .025*Math.sin(t*.0034+p.seed*3) : 0;
+        const speakingWave = speakingBoost*.08*Math.sin(p.seed*2.3+t*.006);
+        const deform = spread + localWave + restless + speakingWave;
+        const pp={x:p.x*deform,y:p.y*deform,z:p.z*deform};
+        const [rx,ry,rz]=rotatePoint(pp,yaw + .08*Math.sin(p.seed+t*p.drift*.08),pitch);
+        const depth=(rz+1.65)/3.3;
+        const perspective=1/(1.11-rz*.18);
+        const x=centerX+rx*baseR*perspective;
+        const y=centerY+ry*baseR*perspective;
+        projected.push({x,y,z:rz,depth,p});
       }
-    }
+      projected.sort((a,b)=>a.z-b.z);
 
-    function showDiagram(diagram) {
-      if (!diagramPanel || !diagram) return;
-      diagramActive = true;
-      currentDiagram = diagram;
-
-      const hud = document.getElementById('jarvisHud');
-      if (hud) hud.classList.add('diagram-mode');
-
-      diagramPanel.classList.add('visible');
-      const title = document.getElementById('diagramTitle');
-      if (title) title.textContent = diagram.title || 'TECHNICAL SCHEMATIC';
-
-      requestAnimationFrame(() => {
-        resizeDiagramCanvas();
-        drawTechnicalDiagram(diagram);
-      });
-    }
-
-    function hideDiagram() {
-      diagramActive = false;
-      currentDiagram = null;
-      if (diagramPanel) diagramPanel.classList.remove('visible');
-      const hud = document.getElementById('jarvisHud');
-      if (hud) hud.classList.remove('diagram-mode');
-    }
-
-    function setHudState(state, status, detail) {
-      const hud = document.getElementById('jarvisHud');
-      const statusEl = document.getElementById('hudStatus');
-      const detailEl = document.getElementById('hudDetail');
-      const stateEl = document.getElementById('hudStateLabel');
-
-      if (!hud || !statusEl || !detailEl) return;
-
-      document.body.classList.add('hud-active');
-      hud.classList.add('visible');
-
-      hudState = state || 'active';
-      hud.dataset.state = hudState;
-      statusEl.textContent = status || 'JARVIS';
-      detailEl.textContent = detail || '';
-
-      if (stateEl) {
-        stateEl.textContent = String(hudState).toUpperCase() + ' // CORE ACTIVE';
-      }
-    }
-
-    function hideHud() {
-      document.body.classList.remove('hud-active');
-      const hud = document.getElementById('jarvisHud');
-      if (hud) hud.classList.remove('visible');
-    }
-
-    setInterval(() => {
-      const el = document.getElementById('hudClock');
-      if (!el) return;
-      el.textContent =
-        new Date().toLocaleTimeString('de-DE', { hour12: false }) +
-        ' // SYSTEM ONLINE';
-    }, 1000);
-
-    window.addEventListener('resize', () => {
-      resizeHudCanvas();
-      resizeDiagramCanvas();
-    });
-    resizeHudCanvas();
-    createPointCloud();
-    requestAnimationFrame(drawPointCloud);
-
-    function handleMessage(event) {
-      let data = event.data;
-
-      if (typeof data === 'string') {
-        try {
-          data = JSON.parse(data);
-        } catch (_) {
-          data = { type: 'SHOW_INFO', text: data };
-        }
+      for(const q of projected){
+        const d=Math.max(.08,Math.min(1,q.depth));
+        const pointAlpha=q.p.alpha*(.19+.73*d)*cfg.energy;
+        const r=q.p.size*(.72+1.2*d)*(1+speakingBoost*.35);
+        const hot = d>.62;
+        cloudCtx.beginPath();
+        cloudCtx.fillStyle = hot
+          ? `rgba(127,222,255,${Math.min(.95,pointAlpha)})`
+          : `rgba(40,157,222,${Math.min(.78,pointAlpha)})`;
+        cloudCtx.arc(q.x,q.y,r,0,Math.PI*2); cloudCtx.fill();
       }
 
-      if (!data || typeof data !== 'object') return;
-
-      setDebug('Empfangen: ' + (data.type || 'unbekannt'));
-
-      switch (data.type) {
-        case 'SHOW_IDEAS':
-          hideDiagram();
-          hideHud();
-          showIdeas(data);
-          break;
-
-        case 'SHOW_RECIPE':
-          hideDiagram();
-          hideHud();
-          showRecipe(data);
-          break;
-
-        case 'SHOW_STEP':
-          showStep(data);
-          break;
-
-        case 'SHOW_STATE':
-          setHudState(
-            data.state || 'active',
-            data.status || data.title || 'JARVIS',
-            data.detail || ''
-          );
-          break;
-
-        case 'SHOW_DIAGRAM':
-          setHudState(
-            'thinking',
-            'Analyse',
-            ''
-          );
-          showDiagram(data.diagram || {});
-          break;
-
-        case 'SHOW_INFO':
-          if (diagramActive) {
-            setHudState(
-              'followup',
-              data.subtitle || 'JARVIS',
-              data.text || ''
-            );
-          } else {
-            hideHud();
-            showInfo(data);
+      // wenige, sehr dezente Verbindungen im vorderen Bereich
+      if (state==='thinking' || state==='speaking') {
+        cloudCtx.lineWidth=.55;
+        for(let i=35;i<projected.length;i+=67){
+          const a=projected[i], b=projected[(i+31)%projected.length];
+          const dx=a.x-b.x, dy=a.y-b.y;
+          if(dx*dx+dy*dy < baseR*baseR*.24){
+            cloudCtx.strokeStyle=`rgba(86,196,244,${.035 + speakingBoost*.025})`;
+            cloudCtx.beginPath(); cloudCtx.moveTo(a.x,a.y); cloudCtx.lineTo(b.x,b.y); cloudCtx.stroke();
           }
-          break;
-
-        case 'STANDBY':
-        case 'SHOW_STANDBY':
-          showStandby(data);
-          break;
-
-        case 'SPEAK_BEGIN':
-          setHudState(
-            'speaking',
-            'Spreche',
-            document.getElementById('hudDetail')?.textContent || ''
-          );
-          speechBegin(
-            event.senderId,
-            data
-          );
-          break;
-
-        case 'SPEAK_CHUNK':
-          speechChunk(data);
-          break;
-
-        case 'SPEAK_END':
-          speechEnd();
-          break;
-
-        default:
-          showInfo({
-            title: 'Nachricht empfangen',
-            text: JSON.stringify(data, null, 2)
-          });
+        }
       }
 
-      if (data.type !== 'SPEAK_CHUNK') {
-        try {
-          context.sendCustomMessage(
-            NAMESPACE,
-            event.senderId,
-            { type: 'ACK', receivedType: data.type || null }
-          );
-        } catch (err) {
-          console.warn('ACK konnte nicht gesendet werden:', err);
-        }
+      requestAnimationFrame(draw);
+    }
+
+    let speechSenderId=null, speechChunks=[], speechExpectedChunks=0, speechMime='audio/mpeg', speechObjectUrl=null;
+    function sendSpeechEvent(type, extra={}) {
+      if (!speechSenderId) return;
+      try { context.sendCustomMessage(NAMESPACE,speechSenderId,Object.assign({type},extra)); }
+      catch(e){ console.warn('Speech event:',e); }
+    }
+    function speechBegin(senderId,data){
+      speechSenderId=senderId; speechExpectedChunks=Number(data.chunks||0); speechMime=data.mime||'audio/mpeg';
+      speechChunks=new Array(speechExpectedChunks); setState('speaking');
+    }
+    function speechChunk(data){ const i=Number(data.index); if(Number.isInteger(i)&&i>=0&&i<speechChunks.length) speechChunks[i]=data.data||''; }
+    async function speechEnd(){
+      try{
+        if(!speechExpectedChunks || speechChunks.some(x=>typeof x!=='string')) throw new Error('TTS-Chunks unvollstaendig.');
+        const binary=atob(speechChunks.join('')); const bytes=new Uint8Array(binary.length);
+        for(let i=0;i<binary.length;i++) bytes[i]=binary.charCodeAt(i);
+        if(speechObjectUrl) URL.revokeObjectURL(speechObjectUrl);
+        speechObjectUrl=URL.createObjectURL(new Blob([bytes],{type:speechMime}));
+        jarvisAudio.src=speechObjectUrl; jarvisAudio.currentTime=0; ensureAnalyser(); await jarvisAudio.play();
+      }catch(err){ sendSpeechEvent('SPEAK_ERROR',{error:String(err)}); resetSpeech(); }
+    }
+    function resetSpeech(){ speechSenderId=null; speechChunks=[]; speechExpectedChunks=0; }
+    jarvisAudio.addEventListener('playing',()=>{ setState('speaking'); sendSpeechEvent('SPEAK_STARTED'); });
+    jarvisAudio.addEventListener('ended',()=>{ sendSpeechEvent('SPEAK_DONE'); setState('followup'); resetSpeech(); });
+    jarvisAudio.addEventListener('error',()=>{ sendSpeechEvent('SPEAK_ERROR',{error:'HTMLAudioElement Fehler '+(jarvisAudio.error?.code||'unbekannt')}); setState('followup'); resetSpeech(); });
+
+    function handleMessage(event){
+      let data=event.data;
+      if(typeof data==='string'){ try{data=JSON.parse(data);}catch(_){data={type:'SHOW_INFO',text:data};} }
+      if(!data || typeof data!=='object') return;
+      switch(data.type){
+        case 'SHOW_STATE': setState(data.state||'active'); break;
+        case 'SHOW_DIAGRAM': setState('thinking'); break; // bewusst nur Punktwolke
+        case 'SHOW_INFO': if(state!=='speaking') setState('followup'); break;
+        case 'SHOW_IDEAS': case 'SHOW_RECIPE': case 'SHOW_STEP': setState('active'); break;
+        case 'STANDBY': case 'SHOW_STANDBY': setState('standby'); break;
+        case 'SPEAK_BEGIN': speechBegin(event.senderId,data); break;
+        case 'SPEAK_CHUNK': speechChunk(data); break;
+        case 'SPEAK_END': speechEnd(); break;
+      }
+      if(data.type!=='SPEAK_CHUNK'){
+        try{context.sendCustomMessage(NAMESPACE,event.senderId,{type:'ACK',receivedType:data.type||null});}catch(e){}
       }
     }
 
-    context.addCustomMessageListener(NAMESPACE, handleMessage);
-
-    const options = new cast.framework.CastReceiverOptions();
-    options.disableIdleTimeout = true;
-    options.statusText = 'JARVIS bereit';
-    options.customNamespaces = {};
-    options.customNamespaces[NAMESPACE] =
-      cast.framework.system.MessageType.JSON;
-
+    window.addEventListener('resize',resize);
+    resize(); createPointCloud(); requestAnimationFrame(draw);
+    context.addCustomMessageListener(NAMESPACE,handleMessage);
+    const options=new cast.framework.CastReceiverOptions();
+    options.disableIdleTimeout=true; options.statusText='JARVIS'; options.customNamespaces={};
+    options.customNamespaces[NAMESPACE]=cast.framework.system.MessageType.JSON;
     context.start(options);
-    setDebug('JARVIS Receiver bereit');
   </script>
-
-  <div id="jarvisHud" class="jarvis-hud" data-state="standby">
-    <canvas id="pointCloudCanvas"></canvas>
-    <div class="hud-vignette"></div>
-    <div class="hud-scan"></div>
-    <div class="hud-meta">JARVIS // NEURAL INTERFACE</div>
-    <div class="hud-meta right" id="hudClock">SYSTEM ONLINE</div>
-    <div class="hud-state-label" id="hudStateLabel">CORE ONLINE</div>
-    
-    <div id="diagramPanel">
-      <div id="diagramTitle" class="diagram-head">TECHNICAL SCHEMATIC</div>
-      <canvas id="diagramCanvas"></canvas>
-    </div>
-
-    <div class="hud-status-wrap">
-      <div id="hudStatus" class="hud-status">Bereit</div>
-      <div id="hudDetail" class="hud-detail">Warte auf eine Anfrage.</div>
-    </div>
-  </div>
-
 </body>
 </html>
