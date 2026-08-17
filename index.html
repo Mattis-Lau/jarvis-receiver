@@ -298,6 +298,191 @@
     .recipe-panel li {
       margin-bottom: .7vh;
     }
+  
+    /* ===== JARVIS CINEMATIC HUD ===== */
+    .jarvis-hud {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 30;
+      display: none;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 50% 48%, rgba(24,170,255,.10), transparent 26%),
+        radial-gradient(circle at 50% 48%, rgba(0,210,255,.04), transparent 48%);
+    }
+    .jarvis-hud.visible { display: block; }
+
+    .hud-grid {
+      position: absolute;
+      inset: 0;
+      opacity: .12;
+      background-image:
+        linear-gradient(rgba(80,200,255,.22) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(80,200,255,.22) 1px, transparent 1px);
+      background-size: 72px 72px;
+      mask-image: radial-gradient(circle, black 10%, transparent 76%);
+    }
+
+    .hud-scanline {
+      position: absolute;
+      left: 0; right: 0;
+      height: 2px;
+      top: -5%;
+      background: linear-gradient(90deg, transparent, rgba(95,220,255,.8), transparent);
+      box-shadow: 0 0 18px rgba(64,190,255,.55);
+      opacity: .32;
+      animation: hudScan 5s linear infinite;
+    }
+
+    .hud-center {
+      position: absolute;
+      left: 50%;
+      top: 45%;
+      width: 440px;
+      height: 440px;
+      transform: translate(-50%, -50%);
+    }
+
+    .hud-core, .hud-ring, .hud-ring2, .hud-ring3 {
+      position: absolute;
+      border-radius: 50%;
+      inset: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .hud-core {
+      width: 112px;
+      height: 112px;
+      background: radial-gradient(circle,
+        rgba(230,252,255,.98) 0%,
+        rgba(74,206,255,.90) 18%,
+        rgba(21,139,219,.54) 42%,
+        rgba(0,55,105,.16) 64%,
+        transparent 72%);
+      box-shadow:
+        0 0 24px rgba(120,225,255,.85),
+        0 0 70px rgba(42,169,255,.55),
+        0 0 150px rgba(0,131,255,.25);
+      animation: coreIdle 2.4s ease-in-out infinite;
+    }
+
+    .hud-ring {
+      width: 220px; height: 220px;
+      border: 2px solid rgba(76,205,255,.62);
+      border-left-color: transparent;
+      border-right-color: rgba(76,205,255,.18);
+      box-shadow: inset 0 0 25px rgba(0,160,255,.12);
+      animation: spin 5.5s linear infinite;
+    }
+    .hud-ring2 {
+      width: 306px; height: 306px;
+      border: 1px dashed rgba(91,214,255,.38);
+      border-top-color: rgba(200,249,255,.88);
+      animation: spinReverse 9s linear infinite;
+    }
+    .hud-ring3 {
+      width: 390px; height: 390px;
+      border: 1px solid rgba(69,184,255,.18);
+      border-top: 3px solid rgba(110,221,255,.72);
+      border-bottom: 3px solid rgba(110,221,255,.34);
+      animation: spin 15s linear infinite;
+    }
+
+    .hud-ticks {
+      position: absolute;
+      inset: 13px;
+      border-radius: 50%;
+      background: repeating-conic-gradient(
+        from 0deg,
+        rgba(125,224,255,.65) 0deg 1deg,
+        transparent 1deg 8deg
+      );
+      mask: radial-gradient(circle, transparent 67%, black 68% 70%, transparent 71%);
+      opacity: .40;
+      animation: spin 28s linear infinite;
+    }
+
+    .hud-status-wrap {
+      position: absolute;
+      left: 50%;
+      top: calc(45% + 260px);
+      transform: translateX(-50%);
+      width: min(78vw, 1200px);
+      text-align: center;
+      text-shadow: 0 0 18px rgba(60,200,255,.35);
+    }
+
+    .hud-status {
+      font-size: 32px;
+      font-weight: 600;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: rgba(188,239,255,.96);
+    }
+    .hud-detail {
+      margin-top: 18px;
+      font-size: 32px;
+      line-height: 1.35;
+      color: rgba(230,247,252,.88);
+      max-height: 2.8em;
+      overflow: hidden;
+    }
+    .hud-meta {
+      position: absolute;
+      top: 44px;
+      left: 56px;
+      color: rgba(122,214,255,.56);
+      letter-spacing: .22em;
+      font-size: 15px;
+      text-transform: uppercase;
+    }
+    .hud-meta.right {
+      left: auto;
+      right: 56px;
+      text-align: right;
+    }
+
+    .jarvis-hud[data-state="listening"] .hud-core {
+      animation: coreListen .72s ease-in-out infinite alternate;
+    }
+    .jarvis-hud[data-state="listening"] .hud-ring {
+      animation-duration: 2.2s;
+    }
+    .jarvis-hud[data-state="thinking"] .hud-ring {
+      animation-duration: .95s;
+    }
+    .jarvis-hud[data-state="thinking"] .hud-ring2 {
+      animation-duration: 1.8s;
+    }
+    .jarvis-hud[data-state="transcribing"] .hud-ring3 {
+      animation-duration: 4s;
+    }
+    .jarvis-hud[data-state="speaking"] .hud-core {
+      animation: coreSpeak .36s ease-in-out infinite alternate;
+    }
+    .jarvis-hud[data-state="understood"] .hud-core {
+      box-shadow:
+        0 0 30px rgba(160,240,255,.95),
+        0 0 90px rgba(50,200,255,.70);
+    }
+
+    @keyframes spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+    @keyframes spinReverse { to { transform: translate(-50%, -50%) rotate(-360deg); } }
+    @keyframes hudScan { from { top: -5%; } to { top: 105%; } }
+    @keyframes coreIdle {
+      0%,100% { transform: translate(-50%, -50%) scale(.94); opacity: .80; }
+      50% { transform: translate(-50%, -50%) scale(1.06); opacity: 1; }
+    }
+    @keyframes coreListen {
+      from { transform: translate(-50%, -50%) scale(.88); filter: brightness(.85); }
+      to { transform: translate(-50%, -50%) scale(1.15); filter: brightness(1.22); }
+    }
+    @keyframes coreSpeak {
+      from { transform: translate(-50%, -50%) scale(.90); }
+      to { transform: translate(-50%, -50%) scale(1.12); }
+    }
+
   </style>
 </head>
 
@@ -569,6 +754,7 @@
       () => {
         setDebug('TTS beendet');
         sendSpeechEvent('SPEAK_DONE');
+        setHudState('active', 'Bereit', 'Du kannst direkt weitersprechen.');
 
         speechSenderId = null;
         speechChunks = [];
@@ -598,6 +784,33 @@
       }
     );
 
+
+    function setHudState(state, status, detail) {
+      const hud = document.getElementById('jarvisHud');
+      const statusEl = document.getElementById('hudStatus');
+      const detailEl = document.getElementById('hudDetail');
+      if (!hud || !statusEl || !detailEl) return;
+
+      hud.classList.add('visible');
+      hud.dataset.state = state || 'active';
+      statusEl.textContent = status || 'JARVIS';
+      detailEl.textContent = detail || '';
+    }
+
+    function hideHud() {
+      const hud = document.getElementById('jarvisHud');
+      if (hud) hud.classList.remove('visible');
+    }
+
+    setInterval(() => {
+      const el = document.getElementById('hudClock');
+      if (!el) return;
+      const now = new Date();
+      el.textContent =
+        now.toLocaleTimeString('de-DE', { hour12: false }) +
+        ' // SYSTEM ONLINE';
+    }, 1000);
+
     function handleMessage(event) {
       let data = event.data;
 
@@ -626,7 +839,16 @@
           showStep(data);
           break;
 
+        case 'SHOW_STATE':
+          setHudState(
+            data.state || 'active',
+            data.status || data.title || 'JARVIS',
+            data.detail || ''
+          );
+          break;
+
         case 'SHOW_INFO':
+          hideHud();
           showInfo(data);
           break;
 
@@ -636,6 +858,11 @@
           break;
 
         case 'SPEAK_BEGIN':
+          setHudState(
+            'speaking',
+            'Spreche',
+            document.getElementById('hudDetail')?.textContent || ''
+          );
           speechBegin(
             event.senderId,
             data
@@ -682,5 +909,24 @@
     context.start(options);
     setDebug('JARVIS Receiver bereit');
   </script>
+
+  <div id="jarvisHud" class="jarvis-hud" data-state="standby">
+    <div class="hud-grid"></div>
+    <div class="hud-scanline"></div>
+    <div class="hud-meta">JARVIS // NEURAL INTERFACE</div>
+    <div class="hud-meta right" id="hudClock">SYSTEM ONLINE</div>
+    <div class="hud-center">
+      <div class="hud-ring3"></div>
+      <div class="hud-ring2"></div>
+      <div class="hud-ring"></div>
+      <div class="hud-ticks"></div>
+      <div class="hud-core"></div>
+    </div>
+    <div class="hud-status-wrap">
+      <div id="hudStatus" class="hud-status">Bereit</div>
+      <div id="hudDetail" class="hud-detail">Warte auf eine Anfrage.</div>
+    </div>
+  </div>
+
 </body>
 </html>
