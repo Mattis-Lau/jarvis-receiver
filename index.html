@@ -405,6 +405,53 @@
       color: rgba(100,207,255,.35);
     }
 
+  
+    /* ===== TECHNICAL DIAGRAM MODE ===== */
+    #diagramPanel {
+      position: fixed;
+      left: 3.5vw;
+      top: 12vh;
+      width: 68vw;
+      height: 68vh;
+      z-index: 10002;
+      display: none;
+      border-left: 1px solid rgba(75,205,255,.42);
+      border-bottom: 1px solid rgba(75,205,255,.20);
+      background:
+        linear-gradient(90deg, rgba(3,17,28,.62), rgba(3,14,24,.18));
+      box-shadow: inset 22px 0 55px rgba(0,125,190,.045);
+      overflow: hidden;
+    }
+
+    #diagramPanel.visible { display: block; }
+
+    .diagram-head {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      padding: 0 26px;
+      font-size: 16px;
+      letter-spacing: .23em;
+      color: rgba(145,226,255,.80);
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(78,204,255,.17);
+    }
+
+    #diagramCanvas {
+      width: 100%;
+      height: calc(100% - 64px);
+    }
+
+    .jarvis-hud.diagram-mode .hud-status-wrap {
+      width: 66vw;
+      left: 37vw;
+      bottom: 3.8vh;
+    }
+
+    .jarvis-hud.diagram-mode .hud-detail {
+      font-size: 23px;
+    }
+
   </style>
 </head>
 
@@ -711,6 +758,13 @@
     );
 
 
+
+    const diagramPanel = document.getElementById('diagramPanel');
+    const diagramCanvas = document.getElementById('diagramCanvas');
+    const diagramCtx = diagramCanvas ? diagramCanvas.getContext('2d') : null;
+    let diagramActive = false;
+    let currentDiagram = null;
+
     const hudCanvas = document.getElementById('pointCloudCanvas');
     const hudCtx = hudCanvas ? hudCanvas.getContext('2d') : null;
     let hudState = 'standby';
@@ -775,8 +829,8 @@
 
       const w = window.innerWidth;
       const h = window.innerHeight;
-      const cx = w / 2;
-      const cy = h * .45;
+      const cx = diagramActive ? w * .865 : w / 2;
+      const cy = diagramActive ? h * .205 : h * .45;
       const p = hudParams();
 
       hudTime += p.speed;
@@ -802,7 +856,8 @@
         const z2 = y * sinX + z1 * cosX;
 
         const jitter = Math.sin(pt.seed + hudTime * 8.2) * p.jitter;
-        const scale = 440 / (440 + z2);
+        const projection = diagramActive ? 245 : 440;
+        const scale = projection / (440 + z2);
 
         points.push({
           x: cx + (x1 + jitter) * scale,
@@ -845,6 +900,199 @@
       requestAnimationFrame(drawPointCloud);
     }
 
+
+    function resizeDiagramCanvas() {
+      if (!diagramCanvas || !diagramCtx || !diagramPanel) return;
+      const rect = diagramCanvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      diagramCanvas.width = Math.max(1, Math.floor(rect.width * dpr));
+      diagramCanvas.height = Math.max(1, Math.floor(rect.height * dpr));
+      diagramCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (currentDiagram) drawTechnicalDiagram(currentDiagram);
+    }
+
+    function roundedRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, r);
+    }
+
+    function drawArrow(ctx, x1, y1, x2, y2) {
+      const a = Math.atan2(y2 - y1, x2 - x1);
+      const head = 12;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(
+        x2 - head * Math.cos(a - Math.PI / 6),
+        y2 - head * Math.sin(a - Math.PI / 6)
+      );
+      ctx.lineTo(
+        x2 - head * Math.cos(a + Math.PI / 6),
+        y2 - head * Math.sin(a + Math.PI / 6)
+      );
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function drawNode(ctx, x, y, w, h, node, index) {
+      const glow = ctx.createLinearGradient(x, y, x + w, y + h);
+      glow.addColorStop(0, 'rgba(18,80,112,.38)');
+      glow.addColorStop(1, 'rgba(5,35,58,.24)');
+
+      ctx.shadowColor = 'rgba(48,190,255,.28)';
+      ctx.shadowBlur = 18;
+      ctx.fillStyle = glow;
+      roundedRect(ctx, x, y, w, h, 10);
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = 'rgba(103,216,255,.62)';
+      ctx.lineWidth = 1.2;
+      roundedRect(ctx, x, y, w, h, 10);
+      ctx.stroke();
+
+      ctx.fillStyle = 'rgba(105,220,255,.68)';
+      ctx.font = '12px Arial';
+      ctx.fillText(String(index + 1).padStart(2, '0'), x + 14, y + 19);
+
+      ctx.fillStyle = 'rgba(225,248,255,.96)';
+      ctx.font = '600 18px Arial';
+      ctx.fillText(node.label || '', x + 14, y + 47);
+
+      ctx.fillStyle = 'rgba(158,211,229,.74)';
+      ctx.font = '13px Arial';
+      const sub = node.sub || '';
+      ctx.fillText(sub.slice(0, 34), x + 14, y + 69);
+    }
+
+    function drawTechnicalDiagram(diagram) {
+      if (!diagramCtx || !diagramCanvas) return;
+
+      const rect = diagramCanvas.getBoundingClientRect();
+      const w = rect.width;
+      const h = rect.height;
+      const ctx = diagramCtx;
+      ctx.clearRect(0, 0, w, h);
+
+      // faint construction grid
+      ctx.save();
+      ctx.strokeStyle = 'rgba(74,181,225,.07)';
+      ctx.lineWidth = 1;
+      for (let x = 20; x < w; x += 48) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+      }
+      for (let y = 20; y < h; y += 48) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+      }
+      ctx.restore();
+
+      const nodes = diagram.nodes || [];
+      if (!nodes.length) return;
+
+      ctx.strokeStyle = 'rgba(87,210,255,.58)';
+      ctx.fillStyle = 'rgba(87,210,255,.75)';
+      ctx.lineWidth = 2;
+
+      if (diagram.kind === 'cycle') {
+        const cx = w * .50;
+        const cy = h * .50;
+        const rx = Math.min(w * .34, 360);
+        const ry = Math.min(h * .32, 205);
+        const nodeW = Math.min(190, w * .22);
+        const nodeH = 84;
+        const pos = [];
+
+        nodes.forEach((node, i) => {
+          const angle = -Math.PI / 2 + i * (2 * Math.PI / nodes.length);
+          pos.push({
+            x: cx + Math.cos(angle) * rx - nodeW / 2,
+            y: cy + Math.sin(angle) * ry - nodeH / 2
+          });
+        });
+
+        for (let i = 0; i < pos.length; i++) {
+          const a = pos[i];
+          const b = pos[(i + 1) % pos.length];
+          drawArrow(
+            ctx,
+            a.x + nodeW / 2,
+            a.y + nodeH / 2,
+            b.x + nodeW / 2,
+            b.y + nodeH / 2
+          );
+        }
+
+        pos.forEach((p, i) => drawNode(ctx, p.x, p.y, nodeW, nodeH, nodes[i], i));
+
+        ctx.fillStyle = 'rgba(90,213,255,.16)';
+        ctx.beginPath();
+        ctx.arc(cx, cy, 65, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(110,225,255,.26)';
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(164,235,255,.66)';
+        ctx.font = '12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('ENERGY LOOP', cx, cy + 4);
+        ctx.textAlign = 'start';
+      } else {
+        const margin = 34;
+        const gap = 22;
+        const available = w - margin * 2;
+        const nodeW = Math.min(185, (available - gap * (nodes.length - 1)) / nodes.length);
+        const nodeH = 100;
+        const y = h * .47 - nodeH / 2;
+        const positions = [];
+
+        nodes.forEach((node, i) => {
+          const x = margin + i * (nodeW + gap);
+          positions.push({x, y});
+        });
+
+        for (let i = 0; i < positions.length - 1; i++) {
+          drawArrow(
+            ctx,
+            positions[i].x + nodeW,
+            y + nodeH / 2,
+            positions[i + 1].x,
+            y + nodeH / 2
+          );
+        }
+
+        positions.forEach((p, i) => drawNode(ctx, p.x, p.y, nodeW, nodeH, nodes[i], i));
+      }
+    }
+
+    function showDiagram(diagram) {
+      if (!diagramPanel || !diagram) return;
+      diagramActive = true;
+      currentDiagram = diagram;
+
+      const hud = document.getElementById('jarvisHud');
+      if (hud) hud.classList.add('diagram-mode');
+
+      diagramPanel.classList.add('visible');
+      const title = document.getElementById('diagramTitle');
+      if (title) title.textContent = diagram.title || 'TECHNICAL SCHEMATIC';
+
+      requestAnimationFrame(() => {
+        resizeDiagramCanvas();
+        drawTechnicalDiagram(diagram);
+      });
+    }
+
+    function hideDiagram() {
+      diagramActive = false;
+      currentDiagram = null;
+      if (diagramPanel) diagramPanel.classList.remove('visible');
+      const hud = document.getElementById('jarvisHud');
+      if (hud) hud.classList.remove('diagram-mode');
+    }
+
     function setHudState(state, status, detail) {
       const hud = document.getElementById('jarvisHud');
       const statusEl = document.getElementById('hudStatus');
@@ -880,7 +1128,10 @@
         ' // SYSTEM ONLINE';
     }, 1000);
 
-    window.addEventListener('resize', resizeHudCanvas);
+    window.addEventListener('resize', () => {
+      resizeHudCanvas();
+      resizeDiagramCanvas();
+    });
     resizeHudCanvas();
     createPointCloud();
     requestAnimationFrame(drawPointCloud);
@@ -902,11 +1153,13 @@
 
       switch (data.type) {
         case 'SHOW_IDEAS':
+          hideDiagram();
           hideHud();
           showIdeas(data);
           break;
 
         case 'SHOW_RECIPE':
+          hideDiagram();
           hideHud();
           showRecipe(data);
           break;
@@ -923,9 +1176,26 @@
           );
           break;
 
+        case 'SHOW_DIAGRAM':
+          setHudState(
+            'thinking',
+            'Analyse',
+            ''
+          );
+          showDiagram(data.diagram || {});
+          break;
+
         case 'SHOW_INFO':
-          hideHud();
-          showInfo(data);
+          if (diagramActive) {
+            setHudState(
+              'followup',
+              data.subtitle || 'JARVIS',
+              data.text || ''
+            );
+          } else {
+            hideHud();
+            showInfo(data);
+          }
           break;
 
         case 'STANDBY':
@@ -993,6 +1263,12 @@
     <div class="hud-meta">JARVIS // NEURAL INTERFACE</div>
     <div class="hud-meta right" id="hudClock">SYSTEM ONLINE</div>
     <div class="hud-state-label" id="hudStateLabel">CORE ONLINE</div>
+    
+    <div id="diagramPanel">
+      <div id="diagramTitle" class="diagram-head">TECHNICAL SCHEMATIC</div>
+      <canvas id="diagramCanvas"></canvas>
+    </div>
+
     <div class="hud-status-wrap">
       <div id="hudStatus" class="hud-status">Bereit</div>
       <div id="hudDetail" class="hud-detail">Warte auf eine Anfrage.</div>
