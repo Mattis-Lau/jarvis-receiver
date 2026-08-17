@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>JARVIS v1.30 Receiver</title>
+  <title>JARVIS v1.31 Receiver</title>
   <script src="//www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
   <style>
     :root{--cyan:#62e5ff;--blue:#248bff;--ink:#02080d;--panel:#061722;--muted:#76aebc}
@@ -15,8 +15,8 @@
     .brand{font-size:1.65rem;font-weight:600;text-shadow:0 0 18px #59ddff}.version,.telemetry{font-size:.72rem;color:var(--muted)}
     .orb{width:2.8rem;height:2.8rem;border:1px solid var(--cyan);border-radius:50%;box-shadow:0 0 22px #4bdcff88,inset 0 0 15px #4bdcff55;animation:pulse 2.4s ease-in-out infinite}
     main{position:absolute;left:3%;right:3%;top:6.6rem;bottom:4.5rem;display:grid;place-items:center}
-    #dashboard{text-align:center}.core{width:24vw;height:24vw;max-width:370px;max-height:370px;border:1px solid #64e8ff55;border-radius:50%;display:grid;place-items:center;box-shadow:0 0 70px #188ecb25,inset 0 0 70px #188ecb18;position:relative}.core:before,.core:after{content:"";position:absolute;border-radius:50%;border:2px dashed #5fe6ff44;inset:8%;animation:spin 18s linear infinite}.core:after{inset:21%;border-style:solid;border-width:1px;animation-direction:reverse;animation-duration:9s}.core h1{font-size:2.1rem;letter-spacing:.22em;margin:0}.core p{color:var(--muted);letter-spacing:.12em}
-    #status{position:absolute;left:4%;bottom:5%;max-width:42%;text-align:left}#statusTitle{font-size:1.35rem;letter-spacing:.08em}#statusDetail{margin-top:.5rem;color:var(--muted)}
+    #dashboard{position:absolute;inset:0;text-align:center;display:grid;grid-template-columns:1fr minmax(280px,32vw) 1fr;grid-template-rows:1fr 1fr;gap:1.2rem 2rem;align-items:center}.core{grid-column:2;grid-row:1/3;justify-self:center;width:23vw;height:23vw;max-width:350px;max-height:350px;border:1px solid #64e8ff55;border-radius:50%;display:grid;place-items:center;box-shadow:0 0 70px #188ecb25,inset 0 0 70px #188ecb18;position:relative}.core:before,.core:after{content:"";position:absolute;border-radius:50%;border:2px dashed #5fe6ff44;inset:8%;animation:spin 18s linear infinite}.core:after{inset:21%;border-style:solid;border-width:1px;animation-direction:reverse;animation-duration:9s}.core h1{font-size:2rem;letter-spacing:.22em;margin:0}.core p{color:var(--muted);letter-spacing:.12em}.tile{height:76%;min-height:108px;text-align:left;padding:1.05rem 1.2rem;background:linear-gradient(135deg,#071b27cc,#031019bb);border:1px solid #5ee4ff45;clip-path:polygon(0 12px,12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%);box-shadow:inset 0 0 28px #1baee814;position:relative}.tile:nth-child(2),.tile:nth-child(3){justify-self:end}.tile:nth-child(4),.tile:nth-child(5){justify-self:start}.tile-label{font-size:.68rem;letter-spacing:.18em;color:#64ddf8}.tile-value{font-size:1.45rem;margin-top:.55rem;color:#e2fbff}.tile-detail{font-size:.72rem;color:#76aebc;margin-top:.35rem}.tile:after{content:"";position:absolute;left:1.2rem;right:1.2rem;bottom:.65rem;height:1px;background:linear-gradient(90deg,#62e5ff88,transparent)}
+    #status{position:absolute;left:50%;bottom:3%;transform:translateX(-50%);width:34%;text-align:center;z-index:3}#statusTitle{font-size:1.05rem;letter-spacing:.08em}#statusDetail{margin-top:.35rem;color:var(--muted);font-size:.8rem}
     #visual{position:absolute;inset:0;display:none;grid-template-rows:auto 1fr}.visual-head{padding:.5rem 1.5rem;color:#aeefff;font-size:.78rem;letter-spacing:.2em}.visual-stage{min-height:0;display:grid;place-items:center;position:relative}.visual-stage:before{content:"";position:absolute;inset:2%;border:1px solid #59ddff19;background:linear-gradient(90deg,#5ce4ff12 1px,transparent 1px),linear-gradient(#5ce4ff12 1px,transparent 1px);background-size:44px 44px;mask-image:radial-gradient(circle,#000 25%,transparent 78%)}#svgHost{position:absolute;inset:0;display:grid;place-items:center}#svgHost svg{width:100%;height:100%;filter:drop-shadow(0 0 10px #27cfff29)}
     #loading{font-size:1rem;letter-spacing:.24em;color:var(--cyan);animation:pulse 1.2s infinite}.hidden{display:none!important}
     footer{position:absolute;left:3%;right:3%;bottom:1.25rem;display:flex;justify-content:space-between;font-size:.65rem;color:#6096a3;letter-spacing:.12em}
@@ -25,9 +25,15 @@
 </head>
 <body>
   <div id="shell">
-    <header><div><div class="brand">J.A.R.V.I.S.</div><div class="version">NEURAL INTERFACE // v1.30</div></div><div class="orb"></div><div class="telemetry">SYSTEM ONLINE<br>PCM 24 KHZ // LIVE</div></header>
+    <header><div><div class="brand">J.A.R.V.I.S.</div><div class="version">NEURAL INTERFACE // v1.31</div></div><div class="orb"></div><div class="telemetry">SYSTEM ONLINE<br>PCM 24 KHZ // LIVE</div></header>
     <main>
-      <section id="dashboard"><div class="core"><div><h1>JARVIS</h1><p>READY</p></div></div></section>
+      <section id="dashboard">
+        <div class="core"><div><h1>JARVIS</h1><p>READY</p></div></div>
+        <div class="tile"><div class="tile-label">WETTER</div><div class="tile-value">BEREIT</div><div class="tile-detail">Wetterabfrage per Sprache</div></div>
+        <div class="tile"><div class="tile-label">KALENDER</div><div class="tile-value" id="dateTile">--.--.----</div><div class="tile-detail">Persönliche Übersicht</div></div>
+        <div class="tile"><div class="tile-label">LOKALZEIT</div><div class="tile-value" id="timeTile">--:--</div><div class="tile-detail">Europe / Berlin</div></div>
+        <div class="tile"><div class="tile-label">SYSTEM</div><div class="tile-value">ONLINE</div><div class="tile-detail">Voice · Visual · Memory</div></div>
+      </section>
       <section id="visual"><div class="visual-head" id="visualTitle">JARVIS // TECHNICAL VISUAL</div><div class="visual-stage"><div id="loading">ANALYSIERE SYSTEMSTRUKTUR …</div><div id="svgHost"></div></div></section>
       <div id="status"><div id="statusTitle">Bereit</div><div id="statusDetail">Warte auf Aktivierung.</div></div>
     </main>
@@ -39,7 +45,7 @@
   const NS='urn:x-cast:com.jarvis.receiver';
   const dashboard=document.getElementById('dashboard'), visual=document.getElementById('visual');
   const svgHost=document.getElementById('svgHost'), loading=document.getElementById('loading');
-  let svgChunks=[], audioCtx=null, nextAudioTime=0, sources=new Set(), live=false;
+  let svgChunks=[], audioCtx=null, nextAudioTime=0, sources=new Set(), live=false, mp3Chunks=[], mp3Audio=null;
   const send=(senderId,type,extra={})=>{try{cast.framework.CastReceiverContext.getInstance().sendCustomMessage(NS,senderId,{type,...extra})}catch(_) {}};
   const showVisual=(title)=>{dashboard.style.display='none';visual.style.display='grid';document.getElementById('visualTitle').textContent=title||'JARVIS // TECHNICAL VISUAL';};
   const showDashboard=()=>{visual.style.display='none';dashboard.style.display='block';svgHost.replaceChildren();};
@@ -47,23 +53,28 @@
   const beginAudio=(rate)=>{hardStop();audioCtx=new AudioContext({sampleRate:Number(rate)||24000,latencyHint:'interactive'});nextAudioTime=audioCtx.currentTime+.035;live=true;};
   const playPcm=(b64)=>{if(!live||!audioCtx)return;const bin=atob(b64),count=bin.length>>1,buf=audioCtx.createBuffer(1,count,24000),out=buf.getChannelData(0);for(let i=0,j=0;i<count;i++,j+=2){let v=bin.charCodeAt(j)|(bin.charCodeAt(j+1)<<8);if(v&0x8000)v-=0x10000;out[i]=v/32768}const src=audioCtx.createBufferSource();src.buffer=buf;src.connect(audioCtx.destination);const at=Math.max(nextAudioTime,audioCtx.currentTime+.012);src.start(at);nextAudioTime=at+buf.duration;sources.add(src);src.onended=()=>sources.delete(src);};
   const finishAudio=(senderId)=>{live=false;const remaining=Math.max(0,nextAudioTime-(audioCtx?audioCtx.currentTime:0));setTimeout(()=>send(senderId,'SPEAK_DONE'),remaining*1000+30);};
+  const stopMp3=()=>{if(mp3Audio){try{mp3Audio.pause();mp3Audio.currentTime=0}catch(_){}mp3Audio=null}mp3Chunks=[];};
+  const playMp3=(senderId,mime)=>{stopMp3();const b64=mp3Chunks.join('');mp3Audio=new Audio('data:'+(mime||'audio/mpeg')+';base64,'+b64);mp3Audio.onplaying=()=>send(senderId,'SPEAK_STARTED');mp3Audio.onended=()=>send(senderId,'SPEAK_DONE');mp3Audio.onerror=()=>send(senderId,'SPEAK_ERROR',{error:'MP3 playback failed'});mp3Audio.play().catch(err=>send(senderId,'SPEAK_ERROR',{error:String(err)}));};
   const safeSvg=(raw)=>{const doc=new DOMParser().parseFromString(raw,'image/svg+xml');if(doc.querySelector('parsererror'))return null;doc.querySelectorAll('script,foreignObject,image,use').forEach(n=>n.remove());doc.querySelectorAll('*').forEach(el=>[...el.attributes].forEach(a=>{if(/^on/i.test(a.name)||/href$/i.test(a.name))el.removeAttribute(a.name)}));return document.importNode(doc.documentElement,true);};
   const context=cast.framework.CastReceiverContext.getInstance();
-  context.addCustomMessageListener(NS,e=>{const m=typeof e.data==='string'?JSON.parse(e.data):e.data||{};switch(m.type){
+  context.addCustomMessageListener(NS,e=>{const m=typeof e.data==='string'?JSON.parse(e.data):e.data||{};send(e.senderId,'ACK',{receivedType:m.type});switch(m.type){
+    case 'SPEAK_BEGIN':hardStop();stopMp3();mp3Chunks=[];break;
+    case 'SPEAK_CHUNK':mp3Chunks[Number(m.index)||0]=m.data||'';break;
+    case 'SPEAK_END':playMp3(e.senderId,m.mime||'audio/mpeg');break;
     case 'LIVE_AUDIO_BEGIN':beginAudio(m.sample_rate);send(e.senderId,'SPEAK_STARTED');break;
     case 'LIVE_AUDIO_CHUNK':playPcm(m.data);break;
     case 'LIVE_AUDIO_END':finishAudio(e.senderId);break;
-    case 'LIVE_AUDIO_STOP':hardStop();send(e.senderId,'SPEAK_DONE',{interrupted:true});break;
+    case 'LIVE_AUDIO_STOP':hardStop();stopMp3();send(e.senderId,'SPEAK_DONE',{interrupted:true});break;
     case 'SHOW_VISUAL_LOADING':showVisual(m.title);loading.classList.remove('hidden');svgHost.replaceChildren();break;
     case 'SHOW_SVG_BEGIN':showVisual(m.title);svgChunks=[];break;
     case 'SHOW_SVG_CHUNK':svgChunks[Number(m.index)||0]=m.data||'';break;
     case 'SHOW_SVG_END':{const node=safeSvg(svgChunks.join(''));if(node){svgHost.replaceChildren(node);loading.classList.add('hidden')}break;}
-    case 'HIDE_VISUAL':case 'SHOW_DASHBOARD':showDashboard();break;
+    case 'HIDE_VISUAL':case 'HIDE_VISUALIZATION':case 'SHOW_DASHBOARD':case 'STANDBY':showDashboard();break;
     case 'SHOW_STATE':document.getElementById('statusTitle').textContent=m.status||m.title||'JARVIS';document.getElementById('statusDetail').textContent=m.detail||'';break;
     case 'SHOW_INFO':document.getElementById('statusTitle').textContent=m.title||'JARVIS';document.getElementById('statusDetail').textContent=m.text||m.detail||'';break;
   }});
   context.start({disableIdleTimeout:true});
-  setInterval(()=>document.getElementById('clock').textContent=new Date().toLocaleTimeString('de-DE')+' // EUROPE BERLIN',1000);
+  const tick=()=>{const d=new Date();document.getElementById('clock').textContent=d.toLocaleTimeString('de-DE')+' // EUROPE BERLIN';document.getElementById('timeTile').textContent=d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});document.getElementById('dateTile').textContent=d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'})};tick();setInterval(tick,1000);
 })();
 </script>
 </body>
