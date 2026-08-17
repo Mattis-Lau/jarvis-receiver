@@ -28,9 +28,9 @@
     .event{padding:4px 0;border-top:1px solid rgba(90,195,230,.10);display:flex;gap:10px}.event:first-of-type{border-top:0}.time{min-width:40px;color:rgba(106,219,255,.82);font-size:10px}.eventtext{font-size:10px;color:rgba(190,234,246,.68)}
     .statusrow{display:flex;justify-content:space-between;padding:4px 0;border-top:1px solid rgba(90,195,230,.08);font-size:9.8px;color:rgba(175,225,239,.58)}.statusrow b{font-weight:500;color:rgba(116,223,255,.82)}
     #coreLabel{position:absolute;left:50%;bottom:78px;transform:translateX(-50%);z-index:3;text-align:center;transition:left .5s ease,bottom .5s ease,opacity .3s ease}.coreName{font-size:15px;letter-spacing:.40em;color:rgba(130,229,255,.78);margin-left:.4em}.coreState{margin-top:8px;font-size:9.5px;letter-spacing:.25em;color:rgba(118,198,226,.42)}body.visual #coreLabel{left:19.5%;bottom:108px}
-    #visualMeta{position:absolute;left:31%;right:4%;top:90px;z-index:4;opacity:0;transform:translateY(8px);transition:opacity .4s ease,transform .4s ease;pointer-events:none}body.visual #visualMeta{opacity:1;transform:none}.visualTitle{font-size:18px;letter-spacing:.18em;color:rgba(157,236,255,.9)}.visualHint{margin-top:6px;font-size:10px;letter-spacing:.15em;color:rgba(117,192,218,.48)}
+    #visualMeta{position:absolute;left:29%;right:3%;top:78px;z-index:4;opacity:0;transform:translateY(8px);transition:opacity .4s ease,transform .4s ease;pointer-events:none}body.visual #visualMeta{opacity:1;transform:none}.visualTitle{font-size:18px;letter-spacing:.18em;color:rgba(157,236,255,.9)}.visualHint{margin-top:6px;font-size:10px;letter-spacing:.15em;color:rgba(117,192,218,.48)}
     #persistentTag{position:absolute;right:50px;bottom:34px;z-index:4;opacity:0;transition:opacity .35s ease;font-size:9px;letter-spacing:.18em;color:rgba(101,205,239,.46)}body.visual #persistentTag{opacity:1}
-    #svgVisual{position:absolute;left:29%;right:2.8%;top:115px;bottom:48px;z-index:3;opacity:0;transform:translateX(16px);transition:opacity .45s ease,transform .5s ease;pointer-events:none;display:flex;align-items:center;justify-content:center}
+    #svgVisual{position:absolute;left:27%;right:1.8%;top:105px;bottom:38px;z-index:3;opacity:0;transform:translateX(16px);transition:opacity .45s ease,transform .5s ease;pointer-events:none;display:flex;align-items:center;justify-content:center}
     body.visual #svgVisual{opacity:1;transform:none}
     #svgVisual svg{width:100%;height:100%;display:block;filter:drop-shadow(0 0 12px rgba(35,183,240,.13))}
     #debug,#jarvisAudio{display:none}
@@ -70,7 +70,7 @@
   <canvas id="diagramCanvas"></canvas>
   <div id="svgVisual" aria-hidden="true"></div>
   <div id="coreLabel"><div class="coreName">JARVIS</div><div id="coreState" class="coreState">STANDBY // CORE ONLINE</div></div>
-  <div id="visualMeta"><div id="visualTitle" class="visualTitle">JARVIS // VISUALISIERUNG</div><div class="visualHint">ANSICHT BLEIBT AKTIV // „DANKE“ ZUM SCHLIESSEN</div></div>
+  <div id="visualMeta"><div id="visualTitle" class="visualTitle">JARVIS // VISUALISIERUNG</div><div class="visualHint">LIVE VISUAL // „DANKE“ ZUM SCHLIESSEN</div></div>
   <div id="persistentTag">PERSISTENT VISUAL // ACTIVE</div>
 </div>
 <div id="debug"></div><audio id="jarvisAudio" preload="auto"></audio>
@@ -130,7 +130,37 @@ function speechBegin(id,data){senderId=id;expected=Number(data.chunks||0);mime=d
 function speechChunk(data){const i=Number(data.index);if(Number.isInteger(i)&&i>=0&&i<chunks.length)chunks[i]=data.data||''}
 async function speechEnd(){try{if(!expected||chunks.some(x=>typeof x!=='string'))throw new Error('TTS-Chunks unvollstaendig');const bin=atob(chunks.join('')),bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);if(objUrl)URL.revokeObjectURL(objUrl);objUrl=URL.createObjectURL(new Blob([bytes],{type:mime}));audio.src=objUrl;audio.currentTime=0;ensureAnalyser();await audio.play()}catch(e){sendSpeech('SPEAK_ERROR',{error:String(e)});resetSpeech()}}
 function resetSpeech(){senderId=null;chunks=[];expected=0}audio.addEventListener('playing',()=>{setState('speaking');sendSpeech('SPEAK_STARTED')});audio.addEventListener('ended',()=>{sendSpeech('SPEAK_DONE');setState('followup');resetSpeech()});audio.addEventListener('error',()=>{sendSpeech('SPEAK_ERROR',{error:'HTMLAudioElement Fehler'});setState('followup');resetSpeech()});
-function handleMessage(event){let data=event.data;if(typeof data==='string'){try{data=JSON.parse(data)}catch(_){data={type:'SHOW_INFO',text:data}}}if(!data||typeof data!=='object')return;switch(data.type){case'SHOW_STATE':setState(data.state||'active');break;case'SHOW_DIAGRAM':showDiagram(data.diagram||{});break;case'SHOW_VISUAL_LOADING':showVisualLoading(data);break;case'SHOW_SVG_BEGIN':svgBegin(data);break;case'SHOW_SVG_CHUNK':svgChunk(data);break;case'SHOW_SVG_END':svgEnd();break;case'SHOW_SVG':showSVG(data);break;case'HIDE_VISUALIZATION':hideVisualization();break;case'SHOW_INFO':if(state!=='speaking')setState('followup');break;case'STANDBY':case'SHOW_STANDBY':if(!visualActive)setState('standby');break;case'SPEAK_BEGIN':speechBegin(event.senderId,data);break;case'SPEAK_CHUNK':speechChunk(data);break;case'SPEAK_END':speechEnd();break;}if(data.type!=='SPEAK_CHUNK'){try{context.sendCustomMessage(NAMESPACE,event.senderId,{type:'ACK',receivedType:data.type||null})}catch(e){}}}
+
+let liveSenderId=null,liveCtx=null,liveAnalyser=null,liveNextTime=0,liveStarted=false,liveEndRequested=false,liveEndTimer=null;
+function liveSend(type,extra={}){if(!liveSenderId)return;try{context.sendCustomMessage(NAMESPACE,liveSenderId,Object.assign({type},extra))}catch(e){}}
+function ensureLiveAudio(){
+  if(!liveCtx){liveCtx=new (window.AudioContext||window.webkitAudioContext)();liveAnalyser=liveCtx.createAnalyser();liveAnalyser.fftSize=128;liveAnalyser.smoothingTimeConstant=.82;liveAnalyser.connect(liveCtx.destination)}
+  if(liveCtx.state==='suspended')liveCtx.resume();
+}
+function liveAudioBegin(id,data){
+  liveSenderId=id;ensureLiveAudio();liveNextTime=Math.max(liveCtx.currentTime+.055,liveNextTime);liveStarted=false;liveEndRequested=false;
+  if(liveEndTimer){clearTimeout(liveEndTimer);liveEndTimer=null}setState('speaking');
+}
+function liveAudioChunk(data){
+  try{
+    ensureLiveAudio();const bin=atob(String(data.data||''));if(!bin.length)return;
+    const samples=Math.floor(bin.length/2),buffer=liveCtx.createBuffer(1,samples,Number(data.sample_rate||24000));
+    const out=buffer.getChannelData(0);const dv=new DataView(new ArrayBuffer(samples*2));
+    for(let i=0;i<samples*2;i++)dv.setUint8(i,bin.charCodeAt(i));
+    for(let i=0;i<samples;i++)out[i]=dv.getInt16(i*2,true)/32768;
+    const src=liveCtx.createBufferSource();src.buffer=buffer;src.connect(liveAnalyser);
+    const now=liveCtx.currentTime;const when=Math.max(now+.025,liveNextTime);src.start(when);liveNextTime=when+buffer.duration;
+    if(!liveStarted){liveStarted=true;setState('speaking');liveSend('SPEAK_STARTED')}
+  }catch(e){liveSend('SPEAK_ERROR',{error:String(e)})}
+}
+function liveAudioEnd(){
+  liveEndRequested=true;if(!liveCtx){liveSend('SPEAK_DONE');return}
+  const ms=Math.max(20,(liveNextTime-liveCtx.currentTime)*1000+35);
+  if(liveEndTimer)clearTimeout(liveEndTimer);
+  liveEndTimer=setTimeout(()=>{liveSend('SPEAK_DONE');setState('followup');liveSenderId=null;liveStarted=false;liveEndRequested=false},ms);
+}
+
+function handleMessage(event){let data=event.data;if(typeof data==='string'){try{data=JSON.parse(data)}catch(_){data={type:'SHOW_INFO',text:data}}}if(!data||typeof data!=='object')return;switch(data.type){case'SHOW_STATE':setState(data.state||'active');break;case'SHOW_DIAGRAM':showDiagram(data.diagram||{});break;case'SHOW_VISUAL_LOADING':showVisualLoading(data);break;case'SHOW_SVG_BEGIN':svgBegin(data);break;case'SHOW_SVG_CHUNK':svgChunk(data);break;case'SHOW_SVG_END':svgEnd();break;case'SHOW_SVG':showSVG(data);break;case'HIDE_VISUALIZATION':hideVisualization();break;case'SHOW_INFO':if(state!=='speaking')setState('followup');break;case'STANDBY':case'SHOW_STANDBY':if(!visualActive)setState('standby');break;case'SPEAK_BEGIN':speechBegin(event.senderId,data);break;case'SPEAK_CHUNK':speechChunk(data);break;case'SPEAK_END':speechEnd();break;case'LIVE_AUDIO_BEGIN':liveAudioBegin(event.senderId,data);break;case'LIVE_AUDIO_CHUNK':liveAudioChunk(data);break;case'LIVE_AUDIO_END':liveAudioEnd();break;}if(data.type!=='SPEAK_CHUNK'){try{context.sendCustomMessage(NAMESPACE,event.senderId,{type:'ACK',receivedType:data.type||null})}catch(e){}}}
 function updateClock(){const d=new Date();document.getElementById('clock').textContent=d.toLocaleTimeString('de-DE',{hour12:false})+' // SYSTEM ONLINE';document.getElementById('dateBig').textContent=d.toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit'}).toUpperCase();document.getElementById('dateSub').textContent=d.toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}
 addEventListener('resize',resize);resize();updateClock();setInterval(updateClock,1000);requestAnimationFrame(drawCore);context.addCustomMessageListener(NAMESPACE,handleMessage);const options=new cast.framework.CastReceiverOptions();options.disableIdleTimeout=true;options.statusText='JARVIS';options.customNamespaces={};options.customNamespaces[NAMESPACE]=cast.framework.system.MessageType.JSON;context.start(options);
 </script>
